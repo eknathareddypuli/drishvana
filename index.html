@@ -1,0 +1,3098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Drishvana — free long-form video studio</title>
+<meta name="description" content="Turn a script into a narrated video with captions and music. Any length, rendered in your browser. Free, private, no signup. By EknathaLabs.">
+<meta name="theme-color" content="#0B0B10">
+<meta property="og:title" content="Drishvana — videos that run longer than a clip">
+<meta property="og:description" content="Script to narrated MP4 in your browser. Free, private, no watermark.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.json">
+<style>
+:root{
+  --bg:#0B0B10;--p1:#12121a;--p2:#1a1a25;--p3:#232332;--line:#2b2b3c;
+  --tx:#ECEBF2;--mut:#9a98b0;--acc:#FFB02E;--acc2:#FF6A3D;--ok:#4ade80;--bad:#f87171;
+  --font:"Segoe UI",Inter,system-ui,-apple-system,Roboto,"Noto Sans Telugu","Nirmala UI",Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+[hidden]{display:none!important}
+a{color:inherit}
+::selection{background:rgba(255,176,46,.35)}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#2c2c3d;border-radius:8px}::-webkit-scrollbar-track{background:transparent}
+
+/* buttons & inputs */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--p2);padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap;transition:.15s;font-weight:600}
+.btn:hover{background:var(--p3);border-color:#3a3a50}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#1a0f00;border:0}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.sm{padding:5px 10px;font-size:12.5px;border-radius:8px}
+.btn.lg{padding:14px 24px;font-size:16px;border-radius:14px}
+.btn.danger:hover{border-color:var(--bad);color:var(--bad)}
+.btn.rec{border-color:var(--bad);color:var(--bad)}
+.btn.rec.live{background:var(--bad);color:#fff;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.6}}
+input[type=text],input[type=number],select,textarea{width:100%;background:var(--p2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;outline:none}
+input[type=text]:focus,input[type=number]:focus,select:focus,textarea:focus{border-color:var(--acc)}
+textarea{resize:vertical;min-height:84px;line-height:1.45}
+input[type=color]{width:38px;height:32px;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--p2);cursor:pointer}
+input[type=range]{width:100%;accent-color:var(--acc)}
+input[type=checkbox]{accent-color:var(--acc);width:16px;height:16px}
+.mut{color:var(--mut)}.small{font-size:12px}
+
+/* ============ landing ============ */
+#landing{min-height:100vh;position:relative;overflow:hidden}
+#landing:before{content:"";position:absolute;inset:-20% -10% auto -10%;height:70vh;background:
+  radial-gradient(40% 50% at 20% 30%,rgba(255,106,61,.20),transparent 70%),
+  radial-gradient(35% 45% at 80% 20%,rgba(255,176,46,.16),transparent 70%);pointer-events:none}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px;position:relative}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.02em;text-decoration:none}
+.logo svg{width:30px;height:30px}
+.nav nav{display:flex;gap:26px;align-items:center}
+.nav nav a{color:var(--mut);text-decoration:none;font-weight:600}.nav nav a:hover{color:var(--tx)}
+.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center;padding:52px 0 40px}
+.eyebrow{display:inline-block;color:var(--acc);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12px;margin-bottom:14px}
+h1{font-size:clamp(38px,5.6vw,66px);line-height:1.02;letter-spacing:-.035em;margin:0 0 18px;font-weight:800}
+h1 em{font-style:normal;background:linear-gradient(120deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:18px;color:#c9c7d8;max-width:520px;margin:0 0 28px}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.demo{border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#000;box-shadow:0 30px 80px rgba(255,106,61,.12),0 0 0 6px rgba(255,255,255,.02)}
+.demo canvas{display:block;width:100%;height:auto;aspect-ratio:16/9}
+.demo .bar{display:flex;gap:6px;padding:10px 12px;background:var(--p1);border-top:1px solid var(--line);align-items:center}
+.demo .bar i{flex:1;height:22px;border-radius:5px;opacity:.9}
+.demo .cap{font-size:12px;color:var(--mut);padding:0 12px 10px;background:var(--p1)}
+.trust{display:flex;gap:10px 28px;flex-wrap:wrap;padding:22px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--mut);font-weight:600;justify-content:center}
+.trust span:before{content:"●";color:var(--acc);margin-right:8px;font-size:9px;vertical-align:2px}
+section.blk{padding:72px 0 8px}
+h2{font-size:clamp(28px,3.6vw,40px);letter-spacing:-.025em;margin:0 0 10px;font-weight:800}
+.sub{color:var(--mut);max-width:620px;margin:0 0 32px;font-size:16px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.step,.feat{background:var(--p1);border:1px solid var(--line);border-radius:16px;padding:22px}
+.step b.n{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#1a0f00;font-weight:800;margin-bottom:12px}
+.step h3,.feat h3{margin:0 0 6px;font-size:17px}.step p,.feat p{margin:0;color:var(--mut)}
+.feats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.feat .ic{font-size:22px;margin-bottom:10px;color:var(--acc)}
+table.cmp{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--p1)}
+.cmp th,.cmp td{padding:14px 18px;text-align:left;border-bottom:1px solid var(--line)}
+.cmp tr:last-child td{border-bottom:0}
+.cmp th{background:var(--p2);font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
+.cmp td.us{color:var(--acc);font-weight:700}
+.note{margin-top:14px;color:var(--mut);font-size:13px}
+.final{margin:72px 0 0;padding:56px 24px;text-align:center;border:1px solid var(--line);border-radius:22px;background:radial-gradient(60% 120% at 50% 0%,rgba(255,176,46,.12),transparent 70%),var(--p1)}
+footer{padding:36px 0 44px;color:var(--mut);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:13px}
+footer a{color:var(--acc);text-decoration:none}
+
+/* ============ studio ============ */
+#studio{height:100vh;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--p1);flex:0 0 auto}
+.top .logo{font-size:16px}.top .logo svg{width:24px;height:24px}
+.top #pname{max-width:260px;background:transparent;border-color:transparent;font-weight:700}
+.top #pname:hover,.top #pname:focus{background:var(--p2);border-color:var(--line)}
+.top .sp{flex:1}
+.work{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 372px;grid-template-rows:minmax(0,1fr) 176px}
+.stage{grid-row:1;grid-column:1;display:flex;flex-direction:column;min-height:0;padding:16px 16px 8px}
+.cwrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:
+  repeating-conic-gradient(#14141c 0 25%,#101016 0 50%) 0 0/20px 20px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+#cv{width:100%;height:100%;object-fit:contain;display:block}
+.transport{display:flex;align-items:center;gap:12px;padding-top:12px}
+.transport .tm{font-variant-numeric:tabular-nums;color:var(--mut);min-width:96px;font-size:13px}
+#play{width:42px;height:42px;border-radius:50%;padding:0}
+#scrub{position:relative;flex:1;height:30px;border-radius:8px;background:var(--p2);border:1px solid var(--line);cursor:pointer;touch-action:none;overflow:hidden}
+#scrub .seg{position:absolute;top:0;bottom:0;border-right:1px solid var(--bg);opacity:.55;transition:opacity .15s}
+#scrub .seg.on{opacity:1}
+#scrub .ph{position:absolute;top:-2px;bottom:-2px;width:2px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.5);pointer-events:none}
+.strip{grid-row:2;grid-column:1;border-top:1px solid var(--line);background:var(--p1);display:flex;flex-direction:column;min-width:0}
+.strip .hd{display:flex;align-items:center;gap:8px;padding:8px 16px 0}
+.strip .hd b{font-size:13px}
+#strip-list{display:flex;gap:10px;overflow-x:auto;padding:10px 16px 12px;flex:1;align-items:flex-start}
+.card{flex:0 0 150px;cursor:pointer;border:2px solid transparent;border-radius:12px;padding:3px;transition:.12s}
+.card:hover{background:var(--p2)}
+.card.on{border-color:var(--acc);background:var(--p2)}
+.card .thumb{position:relative;aspect-ratio:16/9;border-radius:8px;overflow:hidden;display:flex}
+.card .thumb .n{position:absolute;left:6px;top:5px;font-weight:800;font-size:12px;background:rgba(0,0,0,.55);padding:0 7px;border-radius:6px}
+.card .thumb .b{position:absolute;right:6px;top:5px;font-size:10px;font-weight:800;background:var(--acc);color:#1a0f00;padding:0 5px;border-radius:5px}
+.card .thumb .dur{position:absolute;right:6px;bottom:5px;font-size:11px;background:rgba(0,0,0,.6);padding:0 6px;border-radius:5px;font-variant-numeric:tabular-nums}
+.card .cap{margin-top:5px;font-size:12px;color:var(--mut);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3;height:31px}
+.card.add{display:grid;place-items:center;aspect-ratio:auto;height:92px;border:2px dashed var(--line);color:var(--mut);font-size:26px}
+.panel{grid-row:1/3;grid-column:2;border-left:1px solid var(--line);background:var(--p1);overflow-y:auto;display:flex;flex-direction:column}
+.tabs{display:flex;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--p1);z-index:2}
+.tabs button{flex:1;background:none;border:0;padding:12px;font-weight:700;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent}
+.tabs button.on{color:var(--tx);border-color:var(--acc)}
+.pane{padding:14px 16px 28px}
+.sec{margin-bottom:18px}
+.lab{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.09em;margin-bottom:7px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row.g2>*{flex:1}
+.seg2{display:flex;background:var(--p2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg2 button{flex:1;border:0;background:none;padding:6px 4px;border-radius:7px;cursor:pointer;font-weight:600;color:var(--mut);font-size:12.5px}
+.seg2 button.on{background:var(--p3);color:var(--tx)}
+.pals{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.pals i{aspect-ratio:16/10;border-radius:8px;cursor:pointer;border:2px solid transparent}
+.pals i.on{border-color:var(--acc)}
+.hint{font-size:12px;color:var(--mut);margin-top:6px}
+.vstat{font-size:12.5px;padding:8px 10px;background:var(--p2);border:1px dashed var(--line);border-radius:9px;margin-top:8px;color:var(--mut)}
+.vstat.has{border-style:solid;color:var(--tx)}
+.sceneops{display:flex;gap:6px;margin-bottom:14px}.sceneops .btn{flex:1}
+
+/* modals + toast */
+.modal{position:fixed;inset:0;background:rgba(5,5,10,.72);backdrop-filter:blur(4px);display:grid;place-items:center;z-index:50;padding:16px}
+.mbox{width:min(640px,100%);max-height:92vh;overflow:auto;background:var(--p1);border:1px solid var(--line);border-radius:18px;padding:22px}
+.mbox h3{margin:0 0 4px;font-size:20px}
+.mbox .mf{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.prog{height:10px;border-radius:6px;background:var(--p2);overflow:hidden;margin:14px 0 6px}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .15s}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#fff;color:#111;padding:10px 16px;border-radius:12px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:80;max-width:90vw}
+#toast.on{opacity:1;transform:translateX(-50%)}
+#exResult video{width:100%;border-radius:12px;margin-top:10px;background:#000;max-height:46vh}
+
+@media(max-width:960px){
+  .hero{grid-template-columns:1fr;padding-top:24px}
+  .steps,.feats{grid-template-columns:1fr}
+  .nav nav a:not(.btn){display:none}
+  #studio{height:auto;min-height:100vh}
+  .work{display:flex;flex-direction:column}
+  .stage{height:auto}.cwrap{aspect-ratio:var(--ar,16/9);flex:none;max-height:60vh}
+  .panel{border-left:0;border-top:1px solid var(--line)}
+  .top #pname{max-width:130px}.top .btn .lbl{display:none}
+}
+
+</style>
+</head>
+<body>
+<!-- ===================== LANDING ===================== -->
+<div id="landing">
+  <div class="wrap">
+    <div class="nav">
+      <a class="logo" href="#">
+        <svg viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB02E"/><stop offset="1" stop-color="#FF6A3D"/></linearGradient></defs><path d="M40 256C104 150 184 100 256 100s152 50 216 156c-64 106-144 156-216 156S104 362 40 256z" fill="none" stroke="url(#lg1)" stroke-width="34" stroke-linejoin="round"/><path d="M222 196v120l104-60z" fill="url(#lg1)"/></svg>
+        Drishvana
+      </a>
+      <nav>
+        <a href="#how" data-scroll>How it works</a>
+        <a href="#compare" data-scroll>Compare</a>
+        <a class="btn pri sm" href="#studio" data-open-studio>Open studio</a>
+      </nav>
+    </div>
+
+    <div class="hero">
+      <div>
+        <span class="eyebrow">Free · Offline-first · No signup</span>
+        <h1>Videos that run <em>longer than a clip.</em></h1>
+        <p class="lead">Turn a script into a narrated video with captions and music. Add as many scenes as you like, so there is no 30-second wall. It renders in your browser and nothing is uploaded.</p>
+        <div class="cta">
+          <a class="btn pri lg" href="#studio" data-open-studio>Open the studio →</a>
+          <a class="btn lg" href="#how" data-scroll>See how it works</a>
+        </div>
+      </div>
+      <div class="demo">
+        <canvas id="heroCv" width="960" height="540" aria-label="Live demo rendered by Drishvana"></canvas>
+        <div class="bar"><i style="background:linear-gradient(90deg,#2b1055,#d4513b)"></i><i style="background:linear-gradient(90deg,#070b1f,#4b6bff)"></i><i style="background:linear-gradient(90deg,#04201f,#5eead4)"></i><i style="background:linear-gradient(90deg,#1a0b1a,#ff7aa8)"></i></div>
+        <div class="cap">This preview is drawn live by the same engine that exports your video.</div>
+      </div>
+    </div>
+
+    <div class="trust"><span>Runs in your browser</span><span>Nothing uploaded</span><span>No watermark</span><span>Any length</span><span>MP4 export</span></div>
+
+    <section class="blk" id="how">
+      <h2>Script in. Video out.</h2>
+      <p class="sub">Three steps, and every step happens on your device.</p>
+      <div class="steps">
+        <div class="step"><b class="n">1</b><h3>Paste your script</h3><p>Drishvana splits it into scenes. Add a headline, an image, a video clip or a gradient to each one.</p></div>
+        <div class="step"><b class="n">2</b><h3>Give it a voice</h3><p>Record with your mic, upload narration, or generate a local AI voice (beta). Scene length follows the audio.</p></div>
+        <div class="step"><b class="n">3</b><h3>Export MP4</h3><p>Word-by-word captions and music that ducks under your voice are burned in. Choose 16:9, 9:16 or 1:1.</p></div>
+      </div>
+    </section>
+
+    <section class="blk">
+      <h2>Built for long-form</h2>
+      <p class="sub">Tutorials, explainers, stories, podcasts and Shorts, from 20 seconds to 20 minutes.</p>
+      <div class="feats">
+        <div class="feat"><div class="ic">◐</div><h3>Scene timeline</h3><p>Length is the sum of your scenes. Reorder, duplicate and scrub freely.</p></div>
+        <div class="feat"><div class="ic">❝</div><h3>Animated captions</h3><p>Four caption styles with word highlighting, including Telugu, Hindi and other Indic scripts.</p></div>
+        <div class="feat"><div class="ic">♪</div><h3>Music with auto-ducking</h3><p>Drop a track in. It dips under narration and fades out at the end.</p></div>
+        <div class="feat"><div class="ic">▭</div><h3>Every aspect ratio</h3><p>Landscape for YouTube, vertical for Shorts and Reels, square for feeds.</p></div>
+        <div class="feat"><div class="ic">⌂</div><h3>Private by design</h3><p>Your media never leaves your device. Projects autosave in this browser.</p></div>
+        <div class="feat"><div class="ic">⇩</div><h3>Portable projects</h3><p>Save everything as a single file and reopen it anywhere.</p></div>
+      </div>
+    </section>
+
+    <section class="blk" id="compare">
+      <h2>How it differs</h2>
+      <p class="sub">Drishvana is a composer, not a generator. It assembles your voice, text and media into a finished video.</p>
+      <table class="cmp">
+        <tr><th></th><th>Drishvana</th><th>Typical cloud AI video tools</th></tr>
+        <tr><td>Video length</td><td class="us">Any, limited by your device</td><td>Often short clips per generation</td></tr>
+        <tr><td>Price</td><td class="us">Free</td><td>Credits or subscription</td></tr>
+        <tr><td>Account</td><td class="us">None</td><td>Usually required</td></tr>
+        <tr><td>Your media</td><td class="us">Stays on your device</td><td>Uploaded to servers</td></tr>
+        <tr><td>Watermark</td><td class="us">None</td><td>Common on free plans</td></tr>
+      </table>
+      <p class="note">Drishvana does not generate footage from prompts. Bring your own images, clips and voice.</p>
+    </section>
+
+    <div class="final">
+      <h2>Make your first long video in minutes.</h2>
+      <p class="sub" style="margin:0 auto 24px">Starts with a sample project so you can see how scenes, voice and captions fit together.</p>
+      <a class="btn pri lg" href="#studio" data-open-studio>Open the studio →</a>
+    </div>
+    <footer><span>© <span id="yr"></span> Drishvana · a free tool by <a href="https://eknathalabs.com" target="_blank" rel="noopener">EknathaLabs</a></span><span>Offline-first · No ads · No tracking</span></footer>
+  </div>
+</div>
+
+<!-- ===================== STUDIO ===================== -->
+<div id="studio" hidden>
+  <div class="top">
+    <a class="logo" href="#" data-home>
+      <svg viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB02E"/><stop offset="1" stop-color="#FF6A3D"/></linearGradient></defs><path d="M40 256C104 150 184 100 256 100s152 50 216 156c-64 106-144 156-216 156S104 362 40 256z" fill="none" stroke="url(#lg2)" stroke-width="34" stroke-linejoin="round"/><path d="M222 196v120l104-60z" fill="url(#lg2)"/></svg>
+      Drishvana
+    </a>
+    <input type="text" id="pname" maxlength="80" aria-label="Project name">
+    <span class="sp"></span>
+    <button class="btn sm" id="btnNew" title="New project">New</button>
+    <button class="btn sm" id="btnOpen" title="Open a .drishvana project file">Open</button>
+    <button class="btn sm" id="btnSave" title="Save project file (includes media)">Save</button>
+    <button class="btn pri" id="btnExport">Export <span class="lbl">video</span></button>
+  </div>
+
+  <div class="work">
+    <section class="stage">
+      <div class="cwrap"><canvas id="cv"></canvas></div>
+      <div class="transport">
+        <button class="btn pri" id="play" aria-label="Play">▶</button>
+        <div class="tm" id="tm">0:00 / 0:00</div>
+        <div id="scrub" aria-label="Timeline"></div>
+      </div>
+    </section>
+
+    <section class="strip">
+      <div class="hd"><b>Scenes</b><span class="mut small" id="stripInfo"></span><span style="flex:1"></span>
+        <button class="btn sm" id="btnImport">Paste script → scenes</button>
+      </div>
+      <div id="strip-list"></div>
+    </section>
+
+    <aside class="panel">
+      <div class="tabs"><button class="on" data-tab="scene">Scene</button><button data-tab="project">Project</button></div>
+
+      <div class="pane" id="tabScene">
+        <div class="sceneops">
+          <button class="btn sm" id="opLeft" title="Move earlier">←</button>
+          <button class="btn sm" id="opRight" title="Move later">→</button>
+          <button class="btn sm" id="opDup">Duplicate</button>
+          <button class="btn sm" id="opAdd">+ Scene</button>
+          <button class="btn sm danger" id="opDel">Delete</button>
+        </div>
+
+        <div class="sec"><div class="lab">Voiceover script <span class="mut" style="text-transform:none;letter-spacing:0;font-weight:500">drives voice + captions</span></div>
+          <textarea id="sScript" placeholder="What is said in this scene…"></textarea></div>
+
+        <div class="sec"><div class="lab">On-screen headline</div>
+          <input type="text" id="sTitle" placeholder="Optional big title"></div>
+
+        <div class="sec"><div class="lab">Visual</div>
+          <div class="seg2" id="visTabs"><button data-v="gradient">Gradient</button><button data-v="color">Color</button><button data-v="image">Image</button><button data-v="video">Video</button></div>
+          <div id="visGradient"><div class="pals" id="pals"></div></div>
+          <div id="visColor" class="row" style="margin-top:10px"><input type="color" id="sColor"><span class="mut small">Background color</span></div>
+          <div id="visMedia"><div class="vstat" id="visInfo"></div><div class="row" style="margin-top:8px"><button class="btn sm" id="btnVisUpload">Choose file…</button><button class="btn sm danger" id="btnVisClear">Remove</button></div></div>
+        </div>
+
+        <div class="sec row g2">
+          <div><div class="lab">Motion</div><select id="sMotion"><option value="zoomin">Slow zoom in</option><option value="zoomout">Slow zoom out</option><option value="panleft">Pan left</option><option value="panright">Pan right</option><option value="none">None</option></select></div>
+          <div><div class="lab">Transition in</div><select id="sTrans"><option value="fade">Crossfade</option><option value="slide">Slide</option><option value="dip">Dip to black</option><option value="cut">Cut</option></select></div>
+        </div>
+
+        <div class="sec"><div class="lab">Voice</div>
+          <div class="row">
+            <button class="btn sm rec" id="btnRec">● Record</button>
+            <button class="btn sm" id="btnUpAudio">Upload audio</button>
+            <button class="btn sm danger" id="btnRmAudio">Remove</button>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <select id="aiVoice" style="flex:1"><option value="af_heart">AI voice: Heart (US, F)</option><option value="af_bella">Bella (US, F)</option><option value="am_michael">Michael (US, M)</option><option value="bf_emma">Emma (UK, F)</option><option value="bm_george">George (UK, M)</option></select>
+            <button class="btn sm" id="btnAI">Generate (beta)</button>
+          </div>
+          <div class="vstat" id="voiceInfo"></div>
+          <div class="hint">Local AI voice is English-first and downloads about 90 MB once. For Telugu or Hindi, record or upload narration. <a href="#" id="btnSpeak" style="color:var(--acc)">Device voice preview</a> (not exported).</div>
+        </div>
+
+        <div class="sec row g2">
+          <div><div class="lab">Length <span class="mut" id="durHint" style="text-transform:none;letter-spacing:0;font-weight:500"></span></div><input type="number" id="sDur" min="1" max="600" step="0.5" placeholder="Auto"></div>
+          <div><div class="lab">Captions</div><label class="row" style="padding-top:6px"><input type="checkbox" id="sCaps"> Show on this scene</label></div>
+        </div>
+      </div>
+
+      <div class="pane" id="tabProject" hidden>
+        <div class="sec"><div class="lab">Aspect ratio</div>
+          <div class="seg2" id="aspTabs"><button data-a="16:9">16:9 Landscape</button><button data-a="9:16">9:16 Vertical</button><button data-a="1:1">1:1 Square</button></div></div>
+        <div class="sec row g2">
+          <div><div class="lab">Caption style</div><select id="capStyle"><option value="pop">Pop (bold outline)</option><option value="box">Box highlight</option><option value="karaoke">Karaoke</option><option value="minimal">Minimal</option><option value="none">No captions</option></select></div>
+          <div><div class="lab">Position</div><select id="capPos"><option value="bottom">Bottom</option><option value="middle">Middle</option><option value="top">Top</option></select></div>
+        </div>
+        <div class="sec"><div class="lab">Accent color</div><div class="row"><input type="color" id="accent"><span class="mut small">Highlighted word, headline bar</span></div></div>
+        <div class="sec"><div class="lab">Background music</div>
+          <div class="row"><button class="btn sm" id="btnMusic">Choose audio…</button><button class="btn sm danger" id="btnRmMusic">Remove</button></div>
+          <div class="vstat" id="musicInfo"></div>
+          <div class="lab" style="margin-top:12px">Volume <span id="vVol" class="mut"></span></div><input type="range" id="musicVol" min="0" max="1" step="0.01">
+          <div class="lab" style="margin-top:8px">Duck under voice <span id="vDuck" class="mut"></span></div><input type="range" id="duckAmt" min="0" max="0.95" step="0.05">
+        </div>
+        <div class="sec"><div class="lab">Project</div><div class="vstat has" id="pStats"></div>
+          <div class="hint">Autosaved in this browser. Use Save to keep a portable copy that includes your media.</div></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- hidden inputs -->
+<input type="file" id="fVis" hidden>
+<input type="file" id="fAudio" accept="audio/*,video/mp4,video/webm" hidden>
+<input type="file" id="fMusic" accept="audio/*" hidden>
+<input type="file" id="fProject" accept=".drishvana,.json,application/json" hidden>
+
+<!-- import modal -->
+<div class="modal" id="mImport" hidden><div class="mbox">
+  <h3>Paste script → scenes</h3>
+  <p class="mut" style="margin:0 0 12px">Separate scenes with a blank line. A single block is split by sentences.</p>
+  <textarea id="impText" style="min-height:220px" placeholder="Paste your script here…"></textarea>
+  <div class="row" style="margin-top:12px"><label class="row"><input type="radio" name="impMode" value="replace" checked> Replace all scenes</label><label class="row"><input type="radio" name="impMode" value="append"> Append</label></div>
+  <div class="mf"><button class="btn" id="impCancel">Cancel</button><button class="btn pri" id="impGo">Create scenes</button></div>
+</div></div>
+
+<!-- export modal -->
+<div class="modal" id="mExport" hidden><div class="mbox">
+  <h3>Export video</h3>
+  <p class="mut" style="margin:0 0 14px" id="exSummary"></p>
+  <div id="exOpts">
+    <div class="row g2"><div><div class="lab">Quality</div><select id="exQ"><option value="720">720p (faster, smaller)</option><option value="1080">1080p</option></select></div>
+    <div><div class="lab">Frame rate</div><select id="exFps"><option value="30">30 fps</option><option value="24">24 fps</option></select></div></div>
+    <p class="hint" id="exMode"></p>
+  </div>
+  <div id="exProg" hidden><div class="prog"><i id="exBar"></i></div><div class="small mut" id="exTxt">Starting…</div></div>
+  <div id="exResult" hidden></div>
+  <div class="mf"><button class="btn" id="exClose">Close</button><button class="btn pri" id="exGo">Start export</button></div>
+</div></div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+var Mp4Muxer = (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+  var __accessCheck = (obj, member, msg) => {
+    if (!member.has(obj))
+      throw TypeError("Cannot " + msg);
+  };
+  var __privateGet = (obj, member, getter) => {
+    __accessCheck(obj, member, "read from private field");
+    return getter ? getter.call(obj) : member.get(obj);
+  };
+  var __privateAdd = (obj, member, value) => {
+    if (member.has(obj))
+      throw TypeError("Cannot add the same private member more than once");
+    member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+  };
+  var __privateSet = (obj, member, value, setter) => {
+    __accessCheck(obj, member, "write to private field");
+    setter ? setter.call(obj, value) : member.set(obj, value);
+    return value;
+  };
+  var __privateWrapper = (obj, member, setter, getter) => ({
+    set _(value) {
+      __privateSet(obj, member, value, setter);
+    },
+    get _() {
+      return __privateGet(obj, member, getter);
+    }
+  });
+  var __privateMethod = (obj, member, method) => {
+    __accessCheck(obj, member, "access private method");
+    return method;
+  };
+
+  // src/index.ts
+  var src_exports = {};
+  __export(src_exports, {
+    ArrayBufferTarget: () => ArrayBufferTarget,
+    FileSystemWritableFileStreamTarget: () => FileSystemWritableFileStreamTarget,
+    Muxer: () => Muxer,
+    StreamTarget: () => StreamTarget
+  });
+
+  // src/misc.ts
+  var bytes = new Uint8Array(8);
+  var view = new DataView(bytes.buffer);
+  var u8 = (value) => {
+    return [(value % 256 + 256) % 256];
+  };
+  var u16 = (value) => {
+    view.setUint16(0, value, false);
+    return [bytes[0], bytes[1]];
+  };
+  var i16 = (value) => {
+    view.setInt16(0, value, false);
+    return [bytes[0], bytes[1]];
+  };
+  var u24 = (value) => {
+    view.setUint32(0, value, false);
+    return [bytes[1], bytes[2], bytes[3]];
+  };
+  var u32 = (value) => {
+    view.setUint32(0, value, false);
+    return [bytes[0], bytes[1], bytes[2], bytes[3]];
+  };
+  var i32 = (value) => {
+    view.setInt32(0, value, false);
+    return [bytes[0], bytes[1], bytes[2], bytes[3]];
+  };
+  var u64 = (value) => {
+    view.setUint32(0, Math.floor(value / 2 ** 32), false);
+    view.setUint32(4, value, false);
+    return [bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]];
+  };
+  var fixed_8_8 = (value) => {
+    view.setInt16(0, 2 ** 8 * value, false);
+    return [bytes[0], bytes[1]];
+  };
+  var fixed_16_16 = (value) => {
+    view.setInt32(0, 2 ** 16 * value, false);
+    return [bytes[0], bytes[1], bytes[2], bytes[3]];
+  };
+  var fixed_2_30 = (value) => {
+    view.setInt32(0, 2 ** 30 * value, false);
+    return [bytes[0], bytes[1], bytes[2], bytes[3]];
+  };
+  var ascii = (text, nullTerminated = false) => {
+    let bytes2 = Array(text.length).fill(null).map((_, i) => text.charCodeAt(i));
+    if (nullTerminated)
+      bytes2.push(0);
+    return bytes2;
+  };
+  var last = (arr) => {
+    return arr && arr[arr.length - 1];
+  };
+  var lastPresentedSample = (samples) => {
+    let result = void 0;
+    for (let sample of samples) {
+      if (!result || sample.presentationTimestamp > result.presentationTimestamp) {
+        result = sample;
+      }
+    }
+    return result;
+  };
+  var intoTimescale = (timeInSeconds, timescale, round = true) => {
+    let value = timeInSeconds * timescale;
+    return round ? Math.round(value) : value;
+  };
+  var rotationMatrix = (rotationInDegrees) => {
+    let theta = rotationInDegrees * (Math.PI / 180);
+    let cosTheta = Math.cos(theta);
+    let sinTheta = Math.sin(theta);
+    return [
+      cosTheta,
+      sinTheta,
+      0,
+      -sinTheta,
+      cosTheta,
+      0,
+      0,
+      0,
+      1
+    ];
+  };
+  var IDENTITY_MATRIX = rotationMatrix(0);
+  var matrixToBytes = (matrix) => {
+    return [
+      fixed_16_16(matrix[0]),
+      fixed_16_16(matrix[1]),
+      fixed_2_30(matrix[2]),
+      fixed_16_16(matrix[3]),
+      fixed_16_16(matrix[4]),
+      fixed_2_30(matrix[5]),
+      fixed_16_16(matrix[6]),
+      fixed_16_16(matrix[7]),
+      fixed_2_30(matrix[8])
+    ];
+  };
+  var deepClone = (x) => {
+    if (!x)
+      return x;
+    if (typeof x !== "object")
+      return x;
+    if (Array.isArray(x))
+      return x.map(deepClone);
+    return Object.fromEntries(Object.entries(x).map(([key, value]) => [key, deepClone(value)]));
+  };
+  var isU32 = (value) => {
+    return value >= 0 && value < 2 ** 32;
+  };
+
+  // src/box.ts
+  var box = (type, contents, children) => ({
+    type,
+    contents: contents && new Uint8Array(contents.flat(10)),
+    children
+  });
+  var fullBox = (type, version, flags, contents, children) => box(
+    type,
+    [u8(version), u24(flags), contents ?? []],
+    children
+  );
+  var ftyp = (details) => {
+    let minorVersion = 512;
+    if (details.fragmented)
+      return box("ftyp", [
+        ascii("iso5"),
+        // Major brand
+        u32(minorVersion),
+        // Minor version
+        // Compatible brands
+        ascii("iso5"),
+        ascii("iso6"),
+        ascii("mp41")
+      ]);
+    return box("ftyp", [
+      ascii("isom"),
+      // Major brand
+      u32(minorVersion),
+      // Minor version
+      // Compatible brands
+      ascii("isom"),
+      details.holdsAvc ? ascii("avc1") : [],
+      ascii("mp41")
+    ]);
+  };
+  var mdat = (reserveLargeSize) => ({ type: "mdat", largeSize: reserveLargeSize });
+  var free = (size) => ({ type: "free", size });
+  var moov = (tracks, creationTime, fragmented = false) => box("moov", null, [
+    mvhd(creationTime, tracks),
+    ...tracks.map((x) => trak(x, creationTime)),
+    fragmented ? mvex(tracks) : null
+  ]);
+  var mvhd = (creationTime, tracks) => {
+    let duration = intoTimescale(Math.max(
+      0,
+      ...tracks.filter((x) => x.samples.length > 0).map((x) => {
+        const lastSample = lastPresentedSample(x.samples);
+        return lastSample.presentationTimestamp + lastSample.duration;
+      })
+    ), GLOBAL_TIMESCALE);
+    let nextTrackId = Math.max(...tracks.map((x) => x.id)) + 1;
+    let needsU64 = !isU32(creationTime) || !isU32(duration);
+    let u32OrU64 = needsU64 ? u64 : u32;
+    return fullBox("mvhd", +needsU64, 0, [
+      u32OrU64(creationTime),
+      // Creation time
+      u32OrU64(creationTime),
+      // Modification time
+      u32(GLOBAL_TIMESCALE),
+      // Timescale
+      u32OrU64(duration),
+      // Duration
+      fixed_16_16(1),
+      // Preferred rate
+      fixed_8_8(1),
+      // Preferred volume
+      Array(10).fill(0),
+      // Reserved
+      matrixToBytes(IDENTITY_MATRIX),
+      // Matrix
+      Array(24).fill(0),
+      // Pre-defined
+      u32(nextTrackId)
+      // Next track ID
+    ]);
+  };
+  var trak = (track, creationTime) => box("trak", null, [
+    tkhd(track, creationTime),
+    mdia(track, creationTime)
+  ]);
+  var tkhd = (track, creationTime) => {
+    let lastSample = lastPresentedSample(track.samples);
+    let durationInGlobalTimescale = intoTimescale(
+      lastSample ? lastSample.presentationTimestamp + lastSample.duration : 0,
+      GLOBAL_TIMESCALE
+    );
+    let needsU64 = !isU32(creationTime) || !isU32(durationInGlobalTimescale);
+    let u32OrU64 = needsU64 ? u64 : u32;
+    let matrix;
+    if (track.info.type === "video") {
+      matrix = typeof track.info.rotation === "number" ? rotationMatrix(track.info.rotation) : track.info.rotation;
+    } else {
+      matrix = IDENTITY_MATRIX;
+    }
+    return fullBox("tkhd", +needsU64, 3, [
+      u32OrU64(creationTime),
+      // Creation time
+      u32OrU64(creationTime),
+      // Modification time
+      u32(track.id),
+      // Track ID
+      u32(0),
+      // Reserved
+      u32OrU64(durationInGlobalTimescale),
+      // Duration
+      Array(8).fill(0),
+      // Reserved
+      u16(0),
+      // Layer
+      u16(0),
+      // Alternate group
+      fixed_8_8(track.info.type === "audio" ? 1 : 0),
+      // Volume
+      u16(0),
+      // Reserved
+      matrixToBytes(matrix),
+      // Matrix
+      fixed_16_16(track.info.type === "video" ? track.info.width : 0),
+      // Track width
+      fixed_16_16(track.info.type === "video" ? track.info.height : 0)
+      // Track height
+    ]);
+  };
+  var mdia = (track, creationTime) => box("mdia", null, [
+    mdhd(track, creationTime),
+    hdlr(track.info.type === "video" ? "vide" : "soun"),
+    minf(track)
+  ]);
+  var mdhd = (track, creationTime) => {
+    let lastSample = lastPresentedSample(track.samples);
+    let localDuration = intoTimescale(
+      lastSample ? lastSample.presentationTimestamp + lastSample.duration : 0,
+      track.timescale
+    );
+    let needsU64 = !isU32(creationTime) || !isU32(localDuration);
+    let u32OrU64 = needsU64 ? u64 : u32;
+    return fullBox("mdhd", +needsU64, 0, [
+      u32OrU64(creationTime),
+      // Creation time
+      u32OrU64(creationTime),
+      // Modification time
+      u32(track.timescale),
+      // Timescale
+      u32OrU64(localDuration),
+      // Duration
+      u16(21956),
+      // Language ("und", undetermined)
+      u16(0)
+      // Quality
+    ]);
+  };
+  var hdlr = (componentSubtype) => fullBox("hdlr", 0, 0, [
+    ascii("mhlr"),
+    // Component type
+    ascii(componentSubtype),
+    // Component subtype
+    u32(0),
+    // Component manufacturer
+    u32(0),
+    // Component flags
+    u32(0),
+    // Component flags mask
+    ascii("mp4-muxer-hdlr", true)
+    // Component name
+  ]);
+  var minf = (track) => box("minf", null, [
+    track.info.type === "video" ? vmhd() : smhd(),
+    dinf(),
+    stbl(track)
+  ]);
+  var vmhd = () => fullBox("vmhd", 0, 1, [
+    u16(0),
+    // Graphics mode
+    u16(0),
+    // Opcolor R
+    u16(0),
+    // Opcolor G
+    u16(0)
+    // Opcolor B
+  ]);
+  var smhd = () => fullBox("smhd", 0, 0, [
+    u16(0),
+    // Balance
+    u16(0)
+    // Reserved
+  ]);
+  var dinf = () => box("dinf", null, [
+    dref()
+  ]);
+  var dref = () => fullBox("dref", 0, 0, [
+    u32(1)
+    // Entry count
+  ], [
+    url()
+  ]);
+  var url = () => fullBox("url ", 0, 1);
+  var stbl = (track) => {
+    const needsCtts = track.compositionTimeOffsetTable.length > 1 || track.compositionTimeOffsetTable.some((x) => x.sampleCompositionTimeOffset !== 0);
+    return box("stbl", null, [
+      stsd(track),
+      stts(track),
+      stss(track),
+      stsc(track),
+      stsz(track),
+      stco(track),
+      needsCtts ? ctts(track) : null
+    ]);
+  };
+  var stsd = (track) => fullBox("stsd", 0, 0, [
+    u32(1)
+    // Entry count
+  ], [
+    track.info.type === "video" ? videoSampleDescription(
+      VIDEO_CODEC_TO_BOX_NAME[track.info.codec],
+      track
+    ) : soundSampleDescription(
+      AUDIO_CODEC_TO_BOX_NAME[track.info.codec],
+      track
+    )
+  ]);
+  var videoSampleDescription = (compressionType, track) => box(compressionType, [
+    Array(6).fill(0),
+    // Reserved
+    u16(1),
+    // Data reference index
+    u16(0),
+    // Pre-defined
+    u16(0),
+    // Reserved
+    Array(12).fill(0),
+    // Pre-defined
+    u16(track.info.width),
+    // Width
+    u16(track.info.height),
+    // Height
+    u32(4718592),
+    // Horizontal resolution
+    u32(4718592),
+    // Vertical resolution
+    u32(0),
+    // Reserved
+    u16(1),
+    // Frame count
+    Array(32).fill(0),
+    // Compressor name
+    u16(24),
+    // Depth
+    i16(65535)
+    // Pre-defined
+  ], [
+    VIDEO_CODEC_TO_CONFIGURATION_BOX[track.info.codec](track),
+    track.info.decoderConfig.colorSpace ? colr(track) : null
+  ]);
+  var COLOR_PRIMARIES_MAP = {
+    "bt709": 1,
+    // ITU-R BT.709
+    "bt470bg": 5,
+    // ITU-R BT.470BG
+    "smpte170m": 6
+    // ITU-R BT.601 525 - SMPTE 170M
+  };
+  var TRANSFER_CHARACTERISTICS_MAP = {
+    "bt709": 1,
+    // ITU-R BT.709
+    "smpte170m": 6,
+    // SMPTE 170M
+    "iec61966-2-1": 13
+    // IEC 61966-2-1
+  };
+  var MATRIX_COEFFICIENTS_MAP = {
+    "rgb": 0,
+    // Identity
+    "bt709": 1,
+    // ITU-R BT.709
+    "bt470bg": 5,
+    // ITU-R BT.470BG
+    "smpte170m": 6
+    // SMPTE 170M
+  };
+  var colr = (track) => box("colr", [
+    ascii("nclx"),
+    // Colour type
+    u16(COLOR_PRIMARIES_MAP[track.info.decoderConfig.colorSpace.primaries]),
+    // Colour primaries
+    u16(TRANSFER_CHARACTERISTICS_MAP[track.info.decoderConfig.colorSpace.transfer]),
+    // Transfer characteristics
+    u16(MATRIX_COEFFICIENTS_MAP[track.info.decoderConfig.colorSpace.matrix]),
+    // Matrix coefficients
+    u8((track.info.decoderConfig.colorSpace.fullRange ? 1 : 0) << 7)
+    // Full range flag
+  ]);
+  var avcC = (track) => track.info.decoderConfig && box("avcC", [
+    // For AVC, description is an AVCDecoderConfigurationRecord, so nothing else to do here
+    ...new Uint8Array(track.info.decoderConfig.description)
+  ]);
+  var hvcC = (track) => track.info.decoderConfig && box("hvcC", [
+    // For HEVC, description is a HEVCDecoderConfigurationRecord, so nothing else to do here
+    ...new Uint8Array(track.info.decoderConfig.description)
+  ]);
+  var vpcC = (track) => {
+    if (!track.info.decoderConfig) {
+      return null;
+    }
+    let decoderConfig = track.info.decoderConfig;
+    if (!decoderConfig.colorSpace) {
+      throw new Error(`'colorSpace' is required in the decoder config for VP9.`);
+    }
+    let parts = decoderConfig.codec.split(".");
+    let profile = Number(parts[1]);
+    let level = Number(parts[2]);
+    let bitDepth = Number(parts[3]);
+    let chromaSubsampling = 0;
+    let thirdByte = (bitDepth << 4) + (chromaSubsampling << 1) + Number(decoderConfig.colorSpace.fullRange);
+    let colourPrimaries = 2;
+    let transferCharacteristics = 2;
+    let matrixCoefficients = 2;
+    return fullBox("vpcC", 1, 0, [
+      u8(profile),
+      // Profile
+      u8(level),
+      // Level
+      u8(thirdByte),
+      // Bit depth, chroma subsampling, full range
+      u8(colourPrimaries),
+      // Colour primaries
+      u8(transferCharacteristics),
+      // Transfer characteristics
+      u8(matrixCoefficients),
+      // Matrix coefficients
+      u16(0)
+      // Codec initialization data size
+    ]);
+  };
+  var av1C = () => {
+    let marker = 1;
+    let version = 1;
+    let firstByte = (marker << 7) + version;
+    return box("av1C", [
+      firstByte,
+      0,
+      0,
+      0
+    ]);
+  };
+  var soundSampleDescription = (compressionType, track) => box(compressionType, [
+    Array(6).fill(0),
+    // Reserved
+    u16(1),
+    // Data reference index
+    u16(0),
+    // Version
+    u16(0),
+    // Revision level
+    u32(0),
+    // Vendor
+    u16(track.info.numberOfChannels),
+    // Number of channels
+    u16(16),
+    // Sample size (bits)
+    u16(0),
+    // Compression ID
+    u16(0),
+    // Packet size
+    fixed_16_16(track.info.sampleRate)
+    // Sample rate
+  ], [
+    AUDIO_CODEC_TO_CONFIGURATION_BOX[track.info.codec](track)
+  ]);
+  var esds = (track) => {
+    let description = new Uint8Array(track.info.decoderConfig.description);
+    return fullBox("esds", 0, 0, [
+      // https://stackoverflow.com/a/54803118
+      u32(58753152),
+      // TAG(3) = Object Descriptor ([2])
+      u8(32 + description.byteLength),
+      // length of this OD (which includes the next 2 tags)
+      u16(1),
+      // ES_ID = 1
+      u8(0),
+      // flags etc = 0
+      u32(75530368),
+      // TAG(4) = ES Descriptor ([2]) embedded in above OD
+      u8(18 + description.byteLength),
+      // length of this ESD
+      u8(64),
+      // MPEG-4 Audio
+      u8(21),
+      // stream type(6bits)=5 audio, flags(2bits)=1
+      u24(0),
+      // 24bit buffer size
+      u32(130071),
+      // max bitrate
+      u32(130071),
+      // avg bitrate
+      u32(92307584),
+      // TAG(5) = ASC ([2],[3]) embedded in above OD
+      u8(description.byteLength),
+      // length
+      ...description,
+      u32(109084800),
+      // TAG(6)
+      u8(1),
+      // length
+      u8(2)
+      // data
+    ]);
+  };
+  var dOps = (track) => {
+    let preskip = 3840;
+    let gain = 0;
+    const description = track.info.decoderConfig?.description;
+    if (description) {
+      if (description.byteLength < 18) {
+        throw new TypeError("Invalid decoder description provided for Opus; must be at least 18 bytes long.");
+      }
+      const view2 = ArrayBuffer.isView(description) ? new DataView(description.buffer, description.byteOffset, description.byteLength) : new DataView(description);
+      preskip = view2.getUint16(10, true);
+      gain = view2.getInt16(14, true);
+    }
+    return box("dOps", [
+      u8(0),
+      // Version
+      u8(track.info.numberOfChannels),
+      // OutputChannelCount
+      u16(preskip),
+      u32(track.info.sampleRate),
+      // InputSampleRate
+      fixed_8_8(gain),
+      // OutputGain
+      u8(0)
+      // ChannelMappingFamily
+    ]);
+  };
+  var stts = (track) => {
+    return fullBox("stts", 0, 0, [
+      u32(track.timeToSampleTable.length),
+      // Number of entries
+      track.timeToSampleTable.map((x) => [
+        // Time-to-sample table
+        u32(x.sampleCount),
+        // Sample count
+        u32(x.sampleDelta)
+        // Sample duration
+      ])
+    ]);
+  };
+  var stss = (track) => {
+    if (track.samples.every((x) => x.type === "key"))
+      return null;
+    let keySamples = [...track.samples.entries()].filter(([, sample]) => sample.type === "key");
+    return fullBox("stss", 0, 0, [
+      u32(keySamples.length),
+      // Number of entries
+      keySamples.map(([index]) => u32(index + 1))
+      // Sync sample table
+    ]);
+  };
+  var stsc = (track) => {
+    return fullBox("stsc", 0, 0, [
+      u32(track.compactlyCodedChunkTable.length),
+      // Number of entries
+      track.compactlyCodedChunkTable.map((x) => [
+        // Sample-to-chunk table
+        u32(x.firstChunk),
+        // First chunk
+        u32(x.samplesPerChunk),
+        // Samples per chunk
+        u32(1)
+        // Sample description index
+      ])
+    ]);
+  };
+  var stsz = (track) => fullBox("stsz", 0, 0, [
+    u32(0),
+    // Sample size (0 means non-constant size)
+    u32(track.samples.length),
+    // Number of entries
+    track.samples.map((x) => u32(x.size))
+    // Sample size table
+  ]);
+  var stco = (track) => {
+    if (track.finalizedChunks.length > 0 && last(track.finalizedChunks).offset >= 2 ** 32) {
+      return fullBox("co64", 0, 0, [
+        u32(track.finalizedChunks.length),
+        // Number of entries
+        track.finalizedChunks.map((x) => u64(x.offset))
+        // Chunk offset table
+      ]);
+    }
+    return fullBox("stco", 0, 0, [
+      u32(track.finalizedChunks.length),
+      // Number of entries
+      track.finalizedChunks.map((x) => u32(x.offset))
+      // Chunk offset table
+    ]);
+  };
+  var ctts = (track) => {
+    return fullBox("ctts", 0, 0, [
+      u32(track.compositionTimeOffsetTable.length),
+      // Number of entries
+      track.compositionTimeOffsetTable.map((x) => [
+        // Time-to-sample table
+        u32(x.sampleCount),
+        // Sample count
+        u32(x.sampleCompositionTimeOffset)
+        // Sample offset
+      ])
+    ]);
+  };
+  var mvex = (tracks) => {
+    return box("mvex", null, tracks.map(trex));
+  };
+  var trex = (track) => {
+    return fullBox("trex", 0, 0, [
+      u32(track.id),
+      // Track ID
+      u32(1),
+      // Default sample description index
+      u32(0),
+      // Default sample duration
+      u32(0),
+      // Default sample size
+      u32(0)
+      // Default sample flags
+    ]);
+  };
+  var moof = (sequenceNumber, tracks) => {
+    return box("moof", null, [
+      mfhd(sequenceNumber),
+      ...tracks.map(traf)
+    ]);
+  };
+  var mfhd = (sequenceNumber) => {
+    return fullBox("mfhd", 0, 0, [
+      u32(sequenceNumber)
+      // Sequence number
+    ]);
+  };
+  var fragmentSampleFlags = (sample) => {
+    let byte1 = 0;
+    let byte2 = 0;
+    let byte3 = 0;
+    let byte4 = 0;
+    let sampleIsDifferenceSample = sample.type === "delta";
+    byte2 |= +sampleIsDifferenceSample;
+    if (sampleIsDifferenceSample) {
+      byte1 |= 1;
+    } else {
+      byte1 |= 2;
+    }
+    return byte1 << 24 | byte2 << 16 | byte3 << 8 | byte4;
+  };
+  var traf = (track) => {
+    return box("traf", null, [
+      tfhd(track),
+      tfdt(track),
+      trun(track)
+    ]);
+  };
+  var tfhd = (track) => {
+    let tfFlags = 0;
+    tfFlags |= 8;
+    tfFlags |= 16;
+    tfFlags |= 32;
+    tfFlags |= 131072;
+    let referenceSample = track.currentChunk.samples[1] ?? track.currentChunk.samples[0];
+    let referenceSampleInfo = {
+      duration: referenceSample.timescaleUnitsToNextSample,
+      size: referenceSample.size,
+      flags: fragmentSampleFlags(referenceSample)
+    };
+    return fullBox("tfhd", 0, tfFlags, [
+      u32(track.id),
+      // Track ID
+      u32(referenceSampleInfo.duration),
+      // Default sample duration
+      u32(referenceSampleInfo.size),
+      // Default sample size
+      u32(referenceSampleInfo.flags)
+      // Default sample flags
+    ]);
+  };
+  var tfdt = (track) => {
+    return fullBox("tfdt", 1, 0, [
+      u64(intoTimescale(track.currentChunk.startTimestamp, track.timescale))
+      // Base Media Decode Time
+    ]);
+  };
+  var trun = (track) => {
+    let allSampleDurations = track.currentChunk.samples.map((x) => x.timescaleUnitsToNextSample);
+    let allSampleSizes = track.currentChunk.samples.map((x) => x.size);
+    let allSampleFlags = track.currentChunk.samples.map(fragmentSampleFlags);
+    let allSampleCompositionTimeOffsets = track.currentChunk.samples.map((x) => intoTimescale(x.presentationTimestamp - x.decodeTimestamp, track.timescale));
+    let uniqueSampleDurations = new Set(allSampleDurations);
+    let uniqueSampleSizes = new Set(allSampleSizes);
+    let uniqueSampleFlags = new Set(allSampleFlags);
+    let uniqueSampleCompositionTimeOffsets = new Set(allSampleCompositionTimeOffsets);
+    let firstSampleFlagsPresent = uniqueSampleFlags.size === 2 && allSampleFlags[0] !== allSampleFlags[1];
+    let sampleDurationPresent = uniqueSampleDurations.size > 1;
+    let sampleSizePresent = uniqueSampleSizes.size > 1;
+    let sampleFlagsPresent = !firstSampleFlagsPresent && uniqueSampleFlags.size > 1;
+    let sampleCompositionTimeOffsetsPresent = uniqueSampleCompositionTimeOffsets.size > 1 || [...uniqueSampleCompositionTimeOffsets].some((x) => x !== 0);
+    let flags = 0;
+    flags |= 1;
+    flags |= 4 * +firstSampleFlagsPresent;
+    flags |= 256 * +sampleDurationPresent;
+    flags |= 512 * +sampleSizePresent;
+    flags |= 1024 * +sampleFlagsPresent;
+    flags |= 2048 * +sampleCompositionTimeOffsetsPresent;
+    return fullBox("trun", 1, flags, [
+      u32(track.currentChunk.samples.length),
+      // Sample count
+      u32(track.currentChunk.offset - track.currentChunk.moofOffset || 0),
+      // Data offset
+      firstSampleFlagsPresent ? u32(allSampleFlags[0]) : [],
+      track.currentChunk.samples.map((_, i) => [
+        sampleDurationPresent ? u32(allSampleDurations[i]) : [],
+        // Sample duration
+        sampleSizePresent ? u32(allSampleSizes[i]) : [],
+        // Sample size
+        sampleFlagsPresent ? u32(allSampleFlags[i]) : [],
+        // Sample flags
+        // Sample composition time offsets
+        sampleCompositionTimeOffsetsPresent ? i32(allSampleCompositionTimeOffsets[i]) : []
+      ])
+    ]);
+  };
+  var mfra = (tracks) => {
+    return box("mfra", null, [
+      ...tracks.map(tfra),
+      mfro()
+    ]);
+  };
+  var tfra = (track, trackIndex) => {
+    let version = 1;
+    return fullBox("tfra", version, 0, [
+      u32(track.id),
+      // Track ID
+      u32(63),
+      // This specifies that traf number, trun number and sample number are 32-bit ints
+      u32(track.finalizedChunks.length),
+      // Number of entries
+      track.finalizedChunks.map((chunk) => [
+        u64(intoTimescale(chunk.startTimestamp, track.timescale)),
+        // Time
+        u64(chunk.moofOffset),
+        // moof offset
+        u32(trackIndex + 1),
+        // traf number
+        u32(1),
+        // trun number
+        u32(1)
+        // Sample number
+      ])
+    ]);
+  };
+  var mfro = () => {
+    return fullBox("mfro", 0, 0, [
+      // This value needs to be overwritten manually from the outside, where the actual size of the enclosing mfra box
+      // is known
+      u32(0)
+      // Size
+    ]);
+  };
+  var VIDEO_CODEC_TO_BOX_NAME = {
+    "avc": "avc1",
+    "hevc": "hvc1",
+    "vp9": "vp09",
+    "av1": "av01"
+  };
+  var VIDEO_CODEC_TO_CONFIGURATION_BOX = {
+    "avc": avcC,
+    "hevc": hvcC,
+    "vp9": vpcC,
+    "av1": av1C
+  };
+  var AUDIO_CODEC_TO_BOX_NAME = {
+    "aac": "mp4a",
+    "opus": "Opus"
+  };
+  var AUDIO_CODEC_TO_CONFIGURATION_BOX = {
+    "aac": esds,
+    "opus": dOps
+  };
+
+  // src/target.ts
+  var isTarget = Symbol("isTarget");
+  var Target = class {
+  };
+  isTarget;
+  var ArrayBufferTarget = class extends Target {
+    constructor() {
+      super(...arguments);
+      this.buffer = null;
+    }
+  };
+  var StreamTarget = class extends Target {
+    constructor(options) {
+      super();
+      this.options = options;
+      if (typeof options !== "object") {
+        throw new TypeError("StreamTarget requires an options object to be passed to its constructor.");
+      }
+      if (options.onData) {
+        if (typeof options.onData !== "function") {
+          throw new TypeError("options.onData, when provided, must be a function.");
+        }
+        if (options.onData.length < 2) {
+          throw new TypeError(
+            "options.onData, when provided, must be a function that takes in at least two arguments (data and position). Ignoring the position argument, which specifies the byte offset at which the data is to be written, can lead to broken outputs."
+          );
+        }
+      }
+      if (options.chunked !== void 0 && typeof options.chunked !== "boolean") {
+        throw new TypeError("options.chunked, when provided, must be a boolean.");
+      }
+      if (options.chunkSize !== void 0 && (!Number.isInteger(options.chunkSize) || options.chunkSize < 1024)) {
+        throw new TypeError("options.chunkSize, when provided, must be an integer and not smaller than 1024.");
+      }
+    }
+  };
+  var FileSystemWritableFileStreamTarget = class extends Target {
+    constructor(stream, options) {
+      super();
+      this.stream = stream;
+      this.options = options;
+      if (!(stream instanceof FileSystemWritableFileStream)) {
+        throw new TypeError("FileSystemWritableFileStreamTarget requires a FileSystemWritableFileStream instance.");
+      }
+      if (options !== void 0 && typeof options !== "object") {
+        throw new TypeError("FileSystemWritableFileStreamTarget's options, when provided, must be an object.");
+      }
+      if (options) {
+        if (options.chunkSize !== void 0 && (!Number.isInteger(options.chunkSize) || options.chunkSize <= 0)) {
+          throw new TypeError("options.chunkSize, when provided, must be a positive integer");
+        }
+      }
+    }
+  };
+
+  // src/writer.ts
+  var _helper, _helperView;
+  var Writer = class {
+    constructor() {
+      this.pos = 0;
+      __privateAdd(this, _helper, new Uint8Array(8));
+      __privateAdd(this, _helperView, new DataView(__privateGet(this, _helper).buffer));
+      /**
+       * Stores the position from the start of the file to where boxes elements have been written. This is used to
+       * rewrite/edit elements that were already added before, and to measure sizes of things.
+       */
+      this.offsets = /* @__PURE__ */ new WeakMap();
+    }
+    /** Sets the current position for future writes to a new one. */
+    seek(newPos) {
+      this.pos = newPos;
+    }
+    writeU32(value) {
+      __privateGet(this, _helperView).setUint32(0, value, false);
+      this.write(__privateGet(this, _helper).subarray(0, 4));
+    }
+    writeU64(value) {
+      __privateGet(this, _helperView).setUint32(0, Math.floor(value / 2 ** 32), false);
+      __privateGet(this, _helperView).setUint32(4, value, false);
+      this.write(__privateGet(this, _helper).subarray(0, 8));
+    }
+    writeAscii(text) {
+      for (let i = 0; i < text.length; i++) {
+        __privateGet(this, _helperView).setUint8(i % 8, text.charCodeAt(i));
+        if (i % 8 === 7)
+          this.write(__privateGet(this, _helper));
+      }
+      if (text.length % 8 !== 0) {
+        this.write(__privateGet(this, _helper).subarray(0, text.length % 8));
+      }
+    }
+    writeBox(box2) {
+      this.offsets.set(box2, this.pos);
+      if (box2.contents && !box2.children) {
+        this.writeBoxHeader(box2, box2.size ?? box2.contents.byteLength + 8);
+        this.write(box2.contents);
+      } else {
+        let startPos = this.pos;
+        this.writeBoxHeader(box2, 0);
+        if (box2.contents)
+          this.write(box2.contents);
+        if (box2.children) {
+          for (let child of box2.children)
+            if (child)
+              this.writeBox(child);
+        }
+        let endPos = this.pos;
+        let size = box2.size ?? endPos - startPos;
+        this.seek(startPos);
+        this.writeBoxHeader(box2, size);
+        this.seek(endPos);
+      }
+    }
+    writeBoxHeader(box2, size) {
+      this.writeU32(box2.largeSize ? 1 : size);
+      this.writeAscii(box2.type);
+      if (box2.largeSize)
+        this.writeU64(size);
+    }
+    measureBoxHeader(box2) {
+      return 8 + (box2.largeSize ? 8 : 0);
+    }
+    patchBox(box2) {
+      let endPos = this.pos;
+      this.seek(this.offsets.get(box2));
+      this.writeBox(box2);
+      this.seek(endPos);
+    }
+    measureBox(box2) {
+      if (box2.contents && !box2.children) {
+        let headerSize = this.measureBoxHeader(box2);
+        return headerSize + box2.contents.byteLength;
+      } else {
+        let result = this.measureBoxHeader(box2);
+        if (box2.contents)
+          result += box2.contents.byteLength;
+        if (box2.children) {
+          for (let child of box2.children)
+            if (child)
+              result += this.measureBox(child);
+        }
+        return result;
+      }
+    }
+  };
+  _helper = new WeakMap();
+  _helperView = new WeakMap();
+  var _target, _buffer, _bytes, _maxPos, _ensureSize, ensureSize_fn;
+  var ArrayBufferTargetWriter = class extends Writer {
+    constructor(target) {
+      super();
+      __privateAdd(this, _ensureSize);
+      __privateAdd(this, _target, void 0);
+      __privateAdd(this, _buffer, new ArrayBuffer(2 ** 16));
+      __privateAdd(this, _bytes, new Uint8Array(__privateGet(this, _buffer)));
+      __privateAdd(this, _maxPos, 0);
+      __privateSet(this, _target, target);
+    }
+    write(data) {
+      __privateMethod(this, _ensureSize, ensureSize_fn).call(this, this.pos + data.byteLength);
+      __privateGet(this, _bytes).set(data, this.pos);
+      this.pos += data.byteLength;
+      __privateSet(this, _maxPos, Math.max(__privateGet(this, _maxPos), this.pos));
+    }
+    finalize() {
+      __privateMethod(this, _ensureSize, ensureSize_fn).call(this, this.pos);
+      __privateGet(this, _target).buffer = __privateGet(this, _buffer).slice(0, Math.max(__privateGet(this, _maxPos), this.pos));
+    }
+  };
+  _target = new WeakMap();
+  _buffer = new WeakMap();
+  _bytes = new WeakMap();
+  _maxPos = new WeakMap();
+  _ensureSize = new WeakSet();
+  ensureSize_fn = function(size) {
+    let newLength = __privateGet(this, _buffer).byteLength;
+    while (newLength < size)
+      newLength *= 2;
+    if (newLength === __privateGet(this, _buffer).byteLength)
+      return;
+    let newBuffer = new ArrayBuffer(newLength);
+    let newBytes = new Uint8Array(newBuffer);
+    newBytes.set(__privateGet(this, _bytes), 0);
+    __privateSet(this, _buffer, newBuffer);
+    __privateSet(this, _bytes, newBytes);
+  };
+  var DEFAULT_CHUNK_SIZE = 2 ** 24;
+  var MAX_CHUNKS_AT_ONCE = 2;
+  var _target2, _sections, _chunked, _chunkSize, _chunks, _writeDataIntoChunks, writeDataIntoChunks_fn, _insertSectionIntoChunk, insertSectionIntoChunk_fn, _createChunk, createChunk_fn, _flushChunks, flushChunks_fn;
+  var StreamTargetWriter = class extends Writer {
+    constructor(target) {
+      super();
+      __privateAdd(this, _writeDataIntoChunks);
+      __privateAdd(this, _insertSectionIntoChunk);
+      __privateAdd(this, _createChunk);
+      __privateAdd(this, _flushChunks);
+      __privateAdd(this, _target2, void 0);
+      __privateAdd(this, _sections, []);
+      __privateAdd(this, _chunked, void 0);
+      __privateAdd(this, _chunkSize, void 0);
+      /**
+       * The data is divided up into fixed-size chunks, whose contents are first filled in RAM and then flushed out.
+       * A chunk is flushed if all of its contents have been written.
+       */
+      __privateAdd(this, _chunks, []);
+      __privateSet(this, _target2, target);
+      __privateSet(this, _chunked, target.options?.chunked ?? false);
+      __privateSet(this, _chunkSize, target.options?.chunkSize ?? DEFAULT_CHUNK_SIZE);
+    }
+    write(data) {
+      __privateGet(this, _sections).push({
+        data: data.slice(),
+        start: this.pos
+      });
+      this.pos += data.byteLength;
+    }
+    flush() {
+      if (__privateGet(this, _sections).length === 0)
+        return;
+      let chunks = [];
+      let sorted = [...__privateGet(this, _sections)].sort((a, b) => a.start - b.start);
+      chunks.push({
+        start: sorted[0].start,
+        size: sorted[0].data.byteLength
+      });
+      for (let i = 1; i < sorted.length; i++) {
+        let lastChunk = chunks[chunks.length - 1];
+        let section = sorted[i];
+        if (section.start <= lastChunk.start + lastChunk.size) {
+          lastChunk.size = Math.max(lastChunk.size, section.start + section.data.byteLength - lastChunk.start);
+        } else {
+          chunks.push({
+            start: section.start,
+            size: section.data.byteLength
+          });
+        }
+      }
+      for (let chunk of chunks) {
+        chunk.data = new Uint8Array(chunk.size);
+        for (let section of __privateGet(this, _sections)) {
+          if (chunk.start <= section.start && section.start < chunk.start + chunk.size) {
+            chunk.data.set(section.data, section.start - chunk.start);
+          }
+        }
+        if (__privateGet(this, _chunked)) {
+          __privateMethod(this, _writeDataIntoChunks, writeDataIntoChunks_fn).call(this, chunk.data, chunk.start);
+          __privateMethod(this, _flushChunks, flushChunks_fn).call(this);
+        } else {
+          __privateGet(this, _target2).options.onData?.(chunk.data, chunk.start);
+        }
+      }
+      __privateGet(this, _sections).length = 0;
+    }
+    finalize() {
+      if (__privateGet(this, _chunked)) {
+        __privateMethod(this, _flushChunks, flushChunks_fn).call(this, true);
+      }
+    }
+  };
+  _target2 = new WeakMap();
+  _sections = new WeakMap();
+  _chunked = new WeakMap();
+  _chunkSize = new WeakMap();
+  _chunks = new WeakMap();
+  _writeDataIntoChunks = new WeakSet();
+  writeDataIntoChunks_fn = function(data, position) {
+    let chunkIndex = __privateGet(this, _chunks).findIndex((x) => x.start <= position && position < x.start + __privateGet(this, _chunkSize));
+    if (chunkIndex === -1)
+      chunkIndex = __privateMethod(this, _createChunk, createChunk_fn).call(this, position);
+    let chunk = __privateGet(this, _chunks)[chunkIndex];
+    let relativePosition = position - chunk.start;
+    let toWrite = data.subarray(0, Math.min(__privateGet(this, _chunkSize) - relativePosition, data.byteLength));
+    chunk.data.set(toWrite, relativePosition);
+    let section = {
+      start: relativePosition,
+      end: relativePosition + toWrite.byteLength
+    };
+    __privateMethod(this, _insertSectionIntoChunk, insertSectionIntoChunk_fn).call(this, chunk, section);
+    if (chunk.written[0].start === 0 && chunk.written[0].end === __privateGet(this, _chunkSize)) {
+      chunk.shouldFlush = true;
+    }
+    if (__privateGet(this, _chunks).length > MAX_CHUNKS_AT_ONCE) {
+      for (let i = 0; i < __privateGet(this, _chunks).length - 1; i++) {
+        __privateGet(this, _chunks)[i].shouldFlush = true;
+      }
+      __privateMethod(this, _flushChunks, flushChunks_fn).call(this);
+    }
+    if (toWrite.byteLength < data.byteLength) {
+      __privateMethod(this, _writeDataIntoChunks, writeDataIntoChunks_fn).call(this, data.subarray(toWrite.byteLength), position + toWrite.byteLength);
+    }
+  };
+  _insertSectionIntoChunk = new WeakSet();
+  insertSectionIntoChunk_fn = function(chunk, section) {
+    let low = 0;
+    let high = chunk.written.length - 1;
+    let index = -1;
+    while (low <= high) {
+      let mid = Math.floor(low + (high - low + 1) / 2);
+      if (chunk.written[mid].start <= section.start) {
+        low = mid + 1;
+        index = mid;
+      } else {
+        high = mid - 1;
+      }
+    }
+    chunk.written.splice(index + 1, 0, section);
+    if (index === -1 || chunk.written[index].end < section.start)
+      index++;
+    while (index < chunk.written.length - 1 && chunk.written[index].end >= chunk.written[index + 1].start) {
+      chunk.written[index].end = Math.max(chunk.written[index].end, chunk.written[index + 1].end);
+      chunk.written.splice(index + 1, 1);
+    }
+  };
+  _createChunk = new WeakSet();
+  createChunk_fn = function(includesPosition) {
+    let start = Math.floor(includesPosition / __privateGet(this, _chunkSize)) * __privateGet(this, _chunkSize);
+    let chunk = {
+      start,
+      data: new Uint8Array(__privateGet(this, _chunkSize)),
+      written: [],
+      shouldFlush: false
+    };
+    __privateGet(this, _chunks).push(chunk);
+    __privateGet(this, _chunks).sort((a, b) => a.start - b.start);
+    return __privateGet(this, _chunks).indexOf(chunk);
+  };
+  _flushChunks = new WeakSet();
+  flushChunks_fn = function(force = false) {
+    for (let i = 0; i < __privateGet(this, _chunks).length; i++) {
+      let chunk = __privateGet(this, _chunks)[i];
+      if (!chunk.shouldFlush && !force)
+        continue;
+      for (let section of chunk.written) {
+        __privateGet(this, _target2).options.onData?.(
+          chunk.data.subarray(section.start, section.end),
+          chunk.start + section.start
+        );
+      }
+      __privateGet(this, _chunks).splice(i--, 1);
+    }
+  };
+  var FileSystemWritableFileStreamTargetWriter = class extends StreamTargetWriter {
+    constructor(target) {
+      super(new StreamTarget({
+        onData: (data, position) => target.stream.write({
+          type: "write",
+          data,
+          position
+        }),
+        chunked: true,
+        chunkSize: target.options?.chunkSize
+      }));
+    }
+  };
+
+  // src/muxer.ts
+  var GLOBAL_TIMESCALE = 1e3;
+  var SUPPORTED_VIDEO_CODECS = ["avc", "hevc", "vp9", "av1"];
+  var SUPPORTED_AUDIO_CODECS = ["aac", "opus"];
+  var TIMESTAMP_OFFSET = 2082844800;
+  var FIRST_TIMESTAMP_BEHAVIORS = ["strict", "offset", "cross-track-offset"];
+  var _options, _writer, _ftypSize, _mdat, _videoTrack, _audioTrack, _creationTime, _finalizedChunks, _nextFragmentNumber, _videoSampleQueue, _audioSampleQueue, _finalized, _validateOptions, validateOptions_fn, _writeHeader, writeHeader_fn, _computeMoovSizeUpperBound, computeMoovSizeUpperBound_fn, _prepareTracks, prepareTracks_fn, _generateMpeg4AudioSpecificConfig, generateMpeg4AudioSpecificConfig_fn, _createSampleForTrack, createSampleForTrack_fn, _addSampleToTrack, addSampleToTrack_fn, _validateTimestamp, validateTimestamp_fn, _finalizeCurrentChunk, finalizeCurrentChunk_fn, _finalizeFragment, finalizeFragment_fn, _maybeFlushStreamingTargetWriter, maybeFlushStreamingTargetWriter_fn, _ensureNotFinalized, ensureNotFinalized_fn;
+  var Muxer = class {
+    constructor(options) {
+      __privateAdd(this, _validateOptions);
+      __privateAdd(this, _writeHeader);
+      __privateAdd(this, _computeMoovSizeUpperBound);
+      __privateAdd(this, _prepareTracks);
+      // https://wiki.multimedia.cx/index.php/MPEG-4_Audio
+      __privateAdd(this, _generateMpeg4AudioSpecificConfig);
+      __privateAdd(this, _createSampleForTrack);
+      __privateAdd(this, _addSampleToTrack);
+      __privateAdd(this, _validateTimestamp);
+      __privateAdd(this, _finalizeCurrentChunk);
+      __privateAdd(this, _finalizeFragment);
+      __privateAdd(this, _maybeFlushStreamingTargetWriter);
+      __privateAdd(this, _ensureNotFinalized);
+      __privateAdd(this, _options, void 0);
+      __privateAdd(this, _writer, void 0);
+      __privateAdd(this, _ftypSize, void 0);
+      __privateAdd(this, _mdat, void 0);
+      __privateAdd(this, _videoTrack, null);
+      __privateAdd(this, _audioTrack, null);
+      __privateAdd(this, _creationTime, Math.floor(Date.now() / 1e3) + TIMESTAMP_OFFSET);
+      __privateAdd(this, _finalizedChunks, []);
+      // Fields for fragmented MP4:
+      __privateAdd(this, _nextFragmentNumber, 1);
+      __privateAdd(this, _videoSampleQueue, []);
+      __privateAdd(this, _audioSampleQueue, []);
+      __privateAdd(this, _finalized, false);
+      __privateMethod(this, _validateOptions, validateOptions_fn).call(this, options);
+      options.video = deepClone(options.video);
+      options.audio = deepClone(options.audio);
+      options.fastStart = deepClone(options.fastStart);
+      this.target = options.target;
+      __privateSet(this, _options, {
+        firstTimestampBehavior: "strict",
+        ...options
+      });
+      if (options.target instanceof ArrayBufferTarget) {
+        __privateSet(this, _writer, new ArrayBufferTargetWriter(options.target));
+      } else if (options.target instanceof StreamTarget) {
+        __privateSet(this, _writer, new StreamTargetWriter(options.target));
+      } else if (options.target instanceof FileSystemWritableFileStreamTarget) {
+        __privateSet(this, _writer, new FileSystemWritableFileStreamTargetWriter(options.target));
+      } else {
+        throw new Error(`Invalid target: ${options.target}`);
+      }
+      __privateMethod(this, _prepareTracks, prepareTracks_fn).call(this);
+      __privateMethod(this, _writeHeader, writeHeader_fn).call(this);
+    }
+    addVideoChunk(sample, meta, timestamp, compositionTimeOffset) {
+      if (!(sample instanceof EncodedVideoChunk)) {
+        throw new TypeError("addVideoChunk's first argument (sample) must be of type EncodedVideoChunk.");
+      }
+      if (meta && typeof meta !== "object") {
+        throw new TypeError("addVideoChunk's second argument (meta), when provided, must be an object.");
+      }
+      if (timestamp !== void 0 && (!Number.isFinite(timestamp) || timestamp < 0)) {
+        throw new TypeError(
+          "addVideoChunk's third argument (timestamp), when provided, must be a non-negative real number."
+        );
+      }
+      if (compositionTimeOffset !== void 0 && !Number.isFinite(compositionTimeOffset)) {
+        throw new TypeError(
+          "addVideoChunk's fourth argument (compositionTimeOffset), when provided, must be a real number."
+        );
+      }
+      let data = new Uint8Array(sample.byteLength);
+      sample.copyTo(data);
+      this.addVideoChunkRaw(
+        data,
+        sample.type,
+        timestamp ?? sample.timestamp,
+        sample.duration,
+        meta,
+        compositionTimeOffset
+      );
+    }
+    addVideoChunkRaw(data, type, timestamp, duration, meta, compositionTimeOffset) {
+      if (!(data instanceof Uint8Array)) {
+        throw new TypeError("addVideoChunkRaw's first argument (data) must be an instance of Uint8Array.");
+      }
+      if (type !== "key" && type !== "delta") {
+        throw new TypeError("addVideoChunkRaw's second argument (type) must be either 'key' or 'delta'.");
+      }
+      if (!Number.isFinite(timestamp) || timestamp < 0) {
+        throw new TypeError("addVideoChunkRaw's third argument (timestamp) must be a non-negative real number.");
+      }
+      if (!Number.isFinite(duration) || duration < 0) {
+        throw new TypeError("addVideoChunkRaw's fourth argument (duration) must be a non-negative real number.");
+      }
+      if (meta && typeof meta !== "object") {
+        throw new TypeError("addVideoChunkRaw's fifth argument (meta), when provided, must be an object.");
+      }
+      if (compositionTimeOffset !== void 0 && !Number.isFinite(compositionTimeOffset)) {
+        throw new TypeError(
+          "addVideoChunkRaw's sixth argument (compositionTimeOffset), when provided, must be a real number."
+        );
+      }
+      __privateMethod(this, _ensureNotFinalized, ensureNotFinalized_fn).call(this);
+      if (!__privateGet(this, _options).video)
+        throw new Error("No video track declared.");
+      if (typeof __privateGet(this, _options).fastStart === "object" && __privateGet(this, _videoTrack).samples.length === __privateGet(this, _options).fastStart.expectedVideoChunks) {
+        throw new Error(`Cannot add more video chunks than specified in 'fastStart' (${__privateGet(this, _options).fastStart.expectedVideoChunks}).`);
+      }
+      let videoSample = __privateMethod(this, _createSampleForTrack, createSampleForTrack_fn).call(this, __privateGet(this, _videoTrack), data, type, timestamp, duration, meta, compositionTimeOffset);
+      if (__privateGet(this, _options).fastStart === "fragmented" && __privateGet(this, _audioTrack)) {
+        while (__privateGet(this, _audioSampleQueue).length > 0 && __privateGet(this, _audioSampleQueue)[0].decodeTimestamp <= videoSample.decodeTimestamp) {
+          let audioSample = __privateGet(this, _audioSampleQueue).shift();
+          __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _audioTrack), audioSample);
+        }
+        if (videoSample.decodeTimestamp <= __privateGet(this, _audioTrack).lastDecodeTimestamp) {
+          __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _videoTrack), videoSample);
+        } else {
+          __privateGet(this, _videoSampleQueue).push(videoSample);
+        }
+      } else {
+        __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _videoTrack), videoSample);
+      }
+    }
+    addAudioChunk(sample, meta, timestamp) {
+      if (!(sample instanceof EncodedAudioChunk)) {
+        throw new TypeError("addAudioChunk's first argument (sample) must be of type EncodedAudioChunk.");
+      }
+      if (meta && typeof meta !== "object") {
+        throw new TypeError("addAudioChunk's second argument (meta), when provided, must be an object.");
+      }
+      if (timestamp !== void 0 && (!Number.isFinite(timestamp) || timestamp < 0)) {
+        throw new TypeError(
+          "addAudioChunk's third argument (timestamp), when provided, must be a non-negative real number."
+        );
+      }
+      let data = new Uint8Array(sample.byteLength);
+      sample.copyTo(data);
+      this.addAudioChunkRaw(data, sample.type, timestamp ?? sample.timestamp, sample.duration, meta);
+    }
+    addAudioChunkRaw(data, type, timestamp, duration, meta) {
+      if (!(data instanceof Uint8Array)) {
+        throw new TypeError("addAudioChunkRaw's first argument (data) must be an instance of Uint8Array.");
+      }
+      if (type !== "key" && type !== "delta") {
+        throw new TypeError("addAudioChunkRaw's second argument (type) must be either 'key' or 'delta'.");
+      }
+      if (!Number.isFinite(timestamp) || timestamp < 0) {
+        throw new TypeError("addAudioChunkRaw's third argument (timestamp) must be a non-negative real number.");
+      }
+      if (!Number.isFinite(duration) || duration < 0) {
+        throw new TypeError("addAudioChunkRaw's fourth argument (duration) must be a non-negative real number.");
+      }
+      if (meta && typeof meta !== "object") {
+        throw new TypeError("addAudioChunkRaw's fifth argument (meta), when provided, must be an object.");
+      }
+      __privateMethod(this, _ensureNotFinalized, ensureNotFinalized_fn).call(this);
+      if (!__privateGet(this, _options).audio)
+        throw new Error("No audio track declared.");
+      if (typeof __privateGet(this, _options).fastStart === "object" && __privateGet(this, _audioTrack).samples.length === __privateGet(this, _options).fastStart.expectedAudioChunks) {
+        throw new Error(`Cannot add more audio chunks than specified in 'fastStart' (${__privateGet(this, _options).fastStart.expectedAudioChunks}).`);
+      }
+      let audioSample = __privateMethod(this, _createSampleForTrack, createSampleForTrack_fn).call(this, __privateGet(this, _audioTrack), data, type, timestamp, duration, meta);
+      if (__privateGet(this, _options).fastStart === "fragmented" && __privateGet(this, _videoTrack)) {
+        while (__privateGet(this, _videoSampleQueue).length > 0 && __privateGet(this, _videoSampleQueue)[0].decodeTimestamp <= audioSample.decodeTimestamp) {
+          let videoSample = __privateGet(this, _videoSampleQueue).shift();
+          __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _videoTrack), videoSample);
+        }
+        if (audioSample.decodeTimestamp <= __privateGet(this, _videoTrack).lastDecodeTimestamp) {
+          __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _audioTrack), audioSample);
+        } else {
+          __privateGet(this, _audioSampleQueue).push(audioSample);
+        }
+      } else {
+        __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _audioTrack), audioSample);
+      }
+    }
+    /** Finalizes the file, making it ready for use. Must be called after all video and audio chunks have been added. */
+    finalize() {
+      if (__privateGet(this, _finalized)) {
+        throw new Error("Cannot finalize a muxer more than once.");
+      }
+      if (__privateGet(this, _options).fastStart === "fragmented") {
+        for (let videoSample of __privateGet(this, _videoSampleQueue))
+          __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _videoTrack), videoSample);
+        for (let audioSample of __privateGet(this, _audioSampleQueue))
+          __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _audioTrack), audioSample);
+        __privateMethod(this, _finalizeFragment, finalizeFragment_fn).call(this, false);
+      } else {
+        if (__privateGet(this, _videoTrack))
+          __privateMethod(this, _finalizeCurrentChunk, finalizeCurrentChunk_fn).call(this, __privateGet(this, _videoTrack));
+        if (__privateGet(this, _audioTrack))
+          __privateMethod(this, _finalizeCurrentChunk, finalizeCurrentChunk_fn).call(this, __privateGet(this, _audioTrack));
+      }
+      let tracks = [__privateGet(this, _videoTrack), __privateGet(this, _audioTrack)].filter(Boolean);
+      if (__privateGet(this, _options).fastStart === "in-memory") {
+        let mdatSize;
+        for (let i = 0; i < 2; i++) {
+          let movieBox2 = moov(tracks, __privateGet(this, _creationTime));
+          let movieBoxSize = __privateGet(this, _writer).measureBox(movieBox2);
+          mdatSize = __privateGet(this, _writer).measureBox(__privateGet(this, _mdat));
+          let currentChunkPos = __privateGet(this, _writer).pos + movieBoxSize + mdatSize;
+          for (let chunk of __privateGet(this, _finalizedChunks)) {
+            chunk.offset = currentChunkPos;
+            for (let { data } of chunk.samples) {
+              currentChunkPos += data.byteLength;
+              mdatSize += data.byteLength;
+            }
+          }
+          if (currentChunkPos < 2 ** 32)
+            break;
+          if (mdatSize >= 2 ** 32)
+            __privateGet(this, _mdat).largeSize = true;
+        }
+        let movieBox = moov(tracks, __privateGet(this, _creationTime));
+        __privateGet(this, _writer).writeBox(movieBox);
+        __privateGet(this, _mdat).size = mdatSize;
+        __privateGet(this, _writer).writeBox(__privateGet(this, _mdat));
+        for (let chunk of __privateGet(this, _finalizedChunks)) {
+          for (let sample of chunk.samples) {
+            __privateGet(this, _writer).write(sample.data);
+            sample.data = null;
+          }
+        }
+      } else if (__privateGet(this, _options).fastStart === "fragmented") {
+        let startPos = __privateGet(this, _writer).pos;
+        let mfraBox = mfra(tracks);
+        __privateGet(this, _writer).writeBox(mfraBox);
+        let mfraBoxSize = __privateGet(this, _writer).pos - startPos;
+        __privateGet(this, _writer).seek(__privateGet(this, _writer).pos - 4);
+        __privateGet(this, _writer).writeU32(mfraBoxSize);
+      } else {
+        let mdatPos = __privateGet(this, _writer).offsets.get(__privateGet(this, _mdat));
+        let mdatSize = __privateGet(this, _writer).pos - mdatPos;
+        __privateGet(this, _mdat).size = mdatSize;
+        __privateGet(this, _mdat).largeSize = mdatSize >= 2 ** 32;
+        __privateGet(this, _writer).patchBox(__privateGet(this, _mdat));
+        let movieBox = moov(tracks, __privateGet(this, _creationTime));
+        if (typeof __privateGet(this, _options).fastStart === "object") {
+          __privateGet(this, _writer).seek(__privateGet(this, _ftypSize));
+          __privateGet(this, _writer).writeBox(movieBox);
+          let remainingBytes = mdatPos - __privateGet(this, _writer).pos;
+          __privateGet(this, _writer).writeBox(free(remainingBytes));
+        } else {
+          __privateGet(this, _writer).writeBox(movieBox);
+        }
+      }
+      __privateMethod(this, _maybeFlushStreamingTargetWriter, maybeFlushStreamingTargetWriter_fn).call(this);
+      __privateGet(this, _writer).finalize();
+      __privateSet(this, _finalized, true);
+    }
+  };
+  _options = new WeakMap();
+  _writer = new WeakMap();
+  _ftypSize = new WeakMap();
+  _mdat = new WeakMap();
+  _videoTrack = new WeakMap();
+  _audioTrack = new WeakMap();
+  _creationTime = new WeakMap();
+  _finalizedChunks = new WeakMap();
+  _nextFragmentNumber = new WeakMap();
+  _videoSampleQueue = new WeakMap();
+  _audioSampleQueue = new WeakMap();
+  _finalized = new WeakMap();
+  _validateOptions = new WeakSet();
+  validateOptions_fn = function(options) {
+    if (typeof options !== "object") {
+      throw new TypeError("The muxer requires an options object to be passed to its constructor.");
+    }
+    if (!(options.target instanceof Target)) {
+      throw new TypeError("The target must be provided and an instance of Target.");
+    }
+    if (options.video) {
+      if (!SUPPORTED_VIDEO_CODECS.includes(options.video.codec)) {
+        throw new TypeError(`Unsupported video codec: ${options.video.codec}`);
+      }
+      if (!Number.isInteger(options.video.width) || options.video.width <= 0) {
+        throw new TypeError(`Invalid video width: ${options.video.width}. Must be a positive integer.`);
+      }
+      if (!Number.isInteger(options.video.height) || options.video.height <= 0) {
+        throw new TypeError(`Invalid video height: ${options.video.height}. Must be a positive integer.`);
+      }
+      const videoRotation = options.video.rotation;
+      if (typeof videoRotation === "number" && ![0, 90, 180, 270].includes(videoRotation)) {
+        throw new TypeError(`Invalid video rotation: ${videoRotation}. Has to be 0, 90, 180 or 270.`);
+      } else if (Array.isArray(videoRotation) && (videoRotation.length !== 9 || videoRotation.some((value) => typeof value !== "number"))) {
+        throw new TypeError(`Invalid video transformation matrix: ${videoRotation.join()}`);
+      }
+      if (options.video.frameRate !== void 0 && (!Number.isInteger(options.video.frameRate) || options.video.frameRate <= 0)) {
+        throw new TypeError(
+          `Invalid video frame rate: ${options.video.frameRate}. Must be a positive integer.`
+        );
+      }
+    }
+    if (options.audio) {
+      if (!SUPPORTED_AUDIO_CODECS.includes(options.audio.codec)) {
+        throw new TypeError(`Unsupported audio codec: ${options.audio.codec}`);
+      }
+      if (!Number.isInteger(options.audio.numberOfChannels) || options.audio.numberOfChannels <= 0) {
+        throw new TypeError(
+          `Invalid number of audio channels: ${options.audio.numberOfChannels}. Must be a positive integer.`
+        );
+      }
+      if (!Number.isInteger(options.audio.sampleRate) || options.audio.sampleRate <= 0) {
+        throw new TypeError(
+          `Invalid audio sample rate: ${options.audio.sampleRate}. Must be a positive integer.`
+        );
+      }
+    }
+    if (options.firstTimestampBehavior && !FIRST_TIMESTAMP_BEHAVIORS.includes(options.firstTimestampBehavior)) {
+      throw new TypeError(`Invalid first timestamp behavior: ${options.firstTimestampBehavior}`);
+    }
+    if (typeof options.fastStart === "object") {
+      if (options.video) {
+        if (options.fastStart.expectedVideoChunks === void 0) {
+          throw new TypeError(`'fastStart' is an object but is missing property 'expectedVideoChunks'.`);
+        } else if (!Number.isInteger(options.fastStart.expectedVideoChunks) || options.fastStart.expectedVideoChunks < 0) {
+          throw new TypeError(`'expectedVideoChunks' must be a non-negative integer.`);
+        }
+      }
+      if (options.audio) {
+        if (options.fastStart.expectedAudioChunks === void 0) {
+          throw new TypeError(`'fastStart' is an object but is missing property 'expectedAudioChunks'.`);
+        } else if (!Number.isInteger(options.fastStart.expectedAudioChunks) || options.fastStart.expectedAudioChunks < 0) {
+          throw new TypeError(`'expectedAudioChunks' must be a non-negative integer.`);
+        }
+      }
+    } else if (![false, "in-memory", "fragmented"].includes(options.fastStart)) {
+      throw new TypeError(`'fastStart' option must be false, 'in-memory', 'fragmented' or an object.`);
+    }
+    if (options.minFragmentDuration !== void 0 && (!Number.isFinite(options.minFragmentDuration) || options.minFragmentDuration < 0)) {
+      throw new TypeError(`'minFragmentDuration' must be a non-negative number.`);
+    }
+  };
+  _writeHeader = new WeakSet();
+  writeHeader_fn = function() {
+    __privateGet(this, _writer).writeBox(ftyp({
+      holdsAvc: __privateGet(this, _options).video?.codec === "avc",
+      fragmented: __privateGet(this, _options).fastStart === "fragmented"
+    }));
+    __privateSet(this, _ftypSize, __privateGet(this, _writer).pos);
+    if (__privateGet(this, _options).fastStart === "in-memory") {
+      __privateSet(this, _mdat, mdat(false));
+    } else if (__privateGet(this, _options).fastStart === "fragmented") {
+    } else {
+      if (typeof __privateGet(this, _options).fastStart === "object") {
+        let moovSizeUpperBound = __privateMethod(this, _computeMoovSizeUpperBound, computeMoovSizeUpperBound_fn).call(this);
+        __privateGet(this, _writer).seek(__privateGet(this, _writer).pos + moovSizeUpperBound);
+      }
+      __privateSet(this, _mdat, mdat(true));
+      __privateGet(this, _writer).writeBox(__privateGet(this, _mdat));
+    }
+    __privateMethod(this, _maybeFlushStreamingTargetWriter, maybeFlushStreamingTargetWriter_fn).call(this);
+  };
+  _computeMoovSizeUpperBound = new WeakSet();
+  computeMoovSizeUpperBound_fn = function() {
+    if (typeof __privateGet(this, _options).fastStart !== "object")
+      return;
+    let upperBound = 0;
+    let sampleCounts = [
+      __privateGet(this, _options).fastStart.expectedVideoChunks,
+      __privateGet(this, _options).fastStart.expectedAudioChunks
+    ];
+    for (let n of sampleCounts) {
+      if (!n)
+        continue;
+      upperBound += (4 + 4) * Math.ceil(2 / 3 * n);
+      upperBound += 4 * n;
+      upperBound += (4 + 4 + 4) * Math.ceil(2 / 3 * n);
+      upperBound += 4 * n;
+      upperBound += 8 * n;
+    }
+    upperBound += 4096;
+    return upperBound;
+  };
+  _prepareTracks = new WeakSet();
+  prepareTracks_fn = function() {
+    if (__privateGet(this, _options).video) {
+      __privateSet(this, _videoTrack, {
+        id: 1,
+        info: {
+          type: "video",
+          codec: __privateGet(this, _options).video.codec,
+          width: __privateGet(this, _options).video.width,
+          height: __privateGet(this, _options).video.height,
+          rotation: __privateGet(this, _options).video.rotation ?? 0,
+          decoderConfig: null
+        },
+        // The fallback contains many common frame rates as factors
+        timescale: __privateGet(this, _options).video.frameRate ?? 57600,
+        samples: [],
+        finalizedChunks: [],
+        currentChunk: null,
+        firstDecodeTimestamp: void 0,
+        lastDecodeTimestamp: -1,
+        timeToSampleTable: [],
+        compositionTimeOffsetTable: [],
+        lastTimescaleUnits: null,
+        lastSample: null,
+        compactlyCodedChunkTable: []
+      });
+    }
+    if (__privateGet(this, _options).audio) {
+      __privateSet(this, _audioTrack, {
+        id: __privateGet(this, _options).video ? 2 : 1,
+        info: {
+          type: "audio",
+          codec: __privateGet(this, _options).audio.codec,
+          numberOfChannels: __privateGet(this, _options).audio.numberOfChannels,
+          sampleRate: __privateGet(this, _options).audio.sampleRate,
+          decoderConfig: null
+        },
+        timescale: __privateGet(this, _options).audio.sampleRate,
+        samples: [],
+        finalizedChunks: [],
+        currentChunk: null,
+        firstDecodeTimestamp: void 0,
+        lastDecodeTimestamp: -1,
+        timeToSampleTable: [],
+        compositionTimeOffsetTable: [],
+        lastTimescaleUnits: null,
+        lastSample: null,
+        compactlyCodedChunkTable: []
+      });
+      if (__privateGet(this, _options).audio.codec === "aac") {
+        let guessedCodecPrivate = __privateMethod(this, _generateMpeg4AudioSpecificConfig, generateMpeg4AudioSpecificConfig_fn).call(
+          this,
+          2,
+          // Object type for AAC-LC, since it's the most common
+          __privateGet(this, _options).audio.sampleRate,
+          __privateGet(this, _options).audio.numberOfChannels
+        );
+        __privateGet(this, _audioTrack).info.decoderConfig = {
+          codec: __privateGet(this, _options).audio.codec,
+          description: guessedCodecPrivate,
+          numberOfChannels: __privateGet(this, _options).audio.numberOfChannels,
+          sampleRate: __privateGet(this, _options).audio.sampleRate
+        };
+      }
+    }
+  };
+  _generateMpeg4AudioSpecificConfig = new WeakSet();
+  generateMpeg4AudioSpecificConfig_fn = function(objectType, sampleRate, numberOfChannels) {
+    let frequencyIndices = [96e3, 88200, 64e3, 48e3, 44100, 32e3, 24e3, 22050, 16e3, 12e3, 11025, 8e3, 7350];
+    let frequencyIndex = frequencyIndices.indexOf(sampleRate);
+    let channelConfig = numberOfChannels;
+    let configBits = "";
+    configBits += objectType.toString(2).padStart(5, "0");
+    configBits += frequencyIndex.toString(2).padStart(4, "0");
+    if (frequencyIndex === 15)
+      configBits += sampleRate.toString(2).padStart(24, "0");
+    configBits += channelConfig.toString(2).padStart(4, "0");
+    let paddingLength = Math.ceil(configBits.length / 8) * 8;
+    configBits = configBits.padEnd(paddingLength, "0");
+    let configBytes = new Uint8Array(configBits.length / 8);
+    for (let i = 0; i < configBits.length; i += 8) {
+      configBytes[i / 8] = parseInt(configBits.slice(i, i + 8), 2);
+    }
+    return configBytes;
+  };
+  _createSampleForTrack = new WeakSet();
+  createSampleForTrack_fn = function(track, data, type, timestamp, duration, meta, compositionTimeOffset) {
+    let presentationTimestampInSeconds = timestamp / 1e6;
+    let decodeTimestampInSeconds = (timestamp - (compositionTimeOffset ?? 0)) / 1e6;
+    let durationInSeconds = duration / 1e6;
+    let adjusted = __privateMethod(this, _validateTimestamp, validateTimestamp_fn).call(this, presentationTimestampInSeconds, decodeTimestampInSeconds, track);
+    presentationTimestampInSeconds = adjusted.presentationTimestamp;
+    decodeTimestampInSeconds = adjusted.decodeTimestamp;
+    if (meta?.decoderConfig) {
+      if (track.info.decoderConfig === null) {
+        track.info.decoderConfig = meta.decoderConfig;
+      } else {
+        Object.assign(track.info.decoderConfig, meta.decoderConfig);
+      }
+    }
+    let sample = {
+      presentationTimestamp: presentationTimestampInSeconds,
+      decodeTimestamp: decodeTimestampInSeconds,
+      duration: durationInSeconds,
+      data,
+      size: data.byteLength,
+      type,
+      // Will be refined once the next sample comes in
+      timescaleUnitsToNextSample: intoTimescale(durationInSeconds, track.timescale)
+    };
+    return sample;
+  };
+  _addSampleToTrack = new WeakSet();
+  addSampleToTrack_fn = function(track, sample) {
+    if (__privateGet(this, _options).fastStart !== "fragmented") {
+      track.samples.push(sample);
+    }
+    const sampleCompositionTimeOffset = intoTimescale(sample.presentationTimestamp - sample.decodeTimestamp, track.timescale);
+    if (track.lastTimescaleUnits !== null) {
+      let timescaleUnits = intoTimescale(sample.decodeTimestamp, track.timescale, false);
+      let delta = Math.round(timescaleUnits - track.lastTimescaleUnits);
+      track.lastTimescaleUnits += delta;
+      track.lastSample.timescaleUnitsToNextSample = delta;
+      if (__privateGet(this, _options).fastStart !== "fragmented") {
+        let lastTableEntry = last(track.timeToSampleTable);
+        if (lastTableEntry.sampleCount === 1) {
+          lastTableEntry.sampleDelta = delta;
+          lastTableEntry.sampleCount++;
+        } else if (lastTableEntry.sampleDelta === delta) {
+          lastTableEntry.sampleCount++;
+        } else {
+          lastTableEntry.sampleCount--;
+          track.timeToSampleTable.push({
+            sampleCount: 2,
+            sampleDelta: delta
+          });
+        }
+        const lastCompositionTimeOffsetTableEntry = last(track.compositionTimeOffsetTable);
+        if (lastCompositionTimeOffsetTableEntry.sampleCompositionTimeOffset === sampleCompositionTimeOffset) {
+          lastCompositionTimeOffsetTableEntry.sampleCount++;
+        } else {
+          track.compositionTimeOffsetTable.push({
+            sampleCount: 1,
+            sampleCompositionTimeOffset
+          });
+        }
+      }
+    } else {
+      track.lastTimescaleUnits = 0;
+      if (__privateGet(this, _options).fastStart !== "fragmented") {
+        track.timeToSampleTable.push({
+          sampleCount: 1,
+          sampleDelta: intoTimescale(sample.duration, track.timescale)
+        });
+        track.compositionTimeOffsetTable.push({
+          sampleCount: 1,
+          sampleCompositionTimeOffset
+        });
+      }
+    }
+    track.lastSample = sample;
+    let beginNewChunk = false;
+    if (!track.currentChunk) {
+      beginNewChunk = true;
+    } else {
+      let currentChunkDuration = sample.presentationTimestamp - track.currentChunk.startTimestamp;
+      if (__privateGet(this, _options).fastStart === "fragmented") {
+        let mostImportantTrack = __privateGet(this, _videoTrack) ?? __privateGet(this, _audioTrack);
+        const chunkDuration = __privateGet(this, _options).minFragmentDuration ?? 1;
+        if (track === mostImportantTrack && sample.type === "key" && currentChunkDuration >= chunkDuration) {
+          beginNewChunk = true;
+          __privateMethod(this, _finalizeFragment, finalizeFragment_fn).call(this);
+        }
+      } else {
+        beginNewChunk = currentChunkDuration >= 0.5;
+      }
+    }
+    if (beginNewChunk) {
+      if (track.currentChunk) {
+        __privateMethod(this, _finalizeCurrentChunk, finalizeCurrentChunk_fn).call(this, track);
+      }
+      track.currentChunk = {
+        startTimestamp: sample.presentationTimestamp,
+        samples: []
+      };
+    }
+    track.currentChunk.samples.push(sample);
+  };
+  _validateTimestamp = new WeakSet();
+  validateTimestamp_fn = function(presentationTimestamp, decodeTimestamp, track) {
+    const strictTimestampBehavior = __privateGet(this, _options).firstTimestampBehavior === "strict";
+    const noLastDecodeTimestamp = track.lastDecodeTimestamp === -1;
+    const timestampNonZero = decodeTimestamp !== 0;
+    if (strictTimestampBehavior && noLastDecodeTimestamp && timestampNonZero) {
+      throw new Error(
+        `The first chunk for your media track must have a timestamp of 0 (received DTS=${decodeTimestamp}).Non-zero first timestamps are often caused by directly piping frames or audio data from a MediaStreamTrack into the encoder. Their timestamps are typically relative to the age of thedocument, which is probably what you want.
+
+If you want to offset all timestamps of a track such that the first one is zero, set firstTimestampBehavior: 'offset' in the options.
+`
+      );
+    } else if (__privateGet(this, _options).firstTimestampBehavior === "offset" || __privateGet(this, _options).firstTimestampBehavior === "cross-track-offset") {
+      if (track.firstDecodeTimestamp === void 0) {
+        track.firstDecodeTimestamp = decodeTimestamp;
+      }
+      let baseDecodeTimestamp;
+      if (__privateGet(this, _options).firstTimestampBehavior === "offset") {
+        baseDecodeTimestamp = track.firstDecodeTimestamp;
+      } else {
+        baseDecodeTimestamp = Math.min(
+          __privateGet(this, _videoTrack)?.firstDecodeTimestamp ?? Infinity,
+          __privateGet(this, _audioTrack)?.firstDecodeTimestamp ?? Infinity
+        );
+      }
+      decodeTimestamp -= baseDecodeTimestamp;
+      presentationTimestamp -= baseDecodeTimestamp;
+    }
+    if (decodeTimestamp < track.lastDecodeTimestamp) {
+      throw new Error(
+        `Timestamps must be monotonically increasing (DTS went from ${track.lastDecodeTimestamp * 1e6} to ${decodeTimestamp * 1e6}).`
+      );
+    }
+    track.lastDecodeTimestamp = decodeTimestamp;
+    return { presentationTimestamp, decodeTimestamp };
+  };
+  _finalizeCurrentChunk = new WeakSet();
+  finalizeCurrentChunk_fn = function(track) {
+    if (__privateGet(this, _options).fastStart === "fragmented") {
+      throw new Error("Can't finalize individual chunks if 'fastStart' is set to 'fragmented'.");
+    }
+    if (!track.currentChunk)
+      return;
+    track.finalizedChunks.push(track.currentChunk);
+    __privateGet(this, _finalizedChunks).push(track.currentChunk);
+    if (track.compactlyCodedChunkTable.length === 0 || last(track.compactlyCodedChunkTable).samplesPerChunk !== track.currentChunk.samples.length) {
+      track.compactlyCodedChunkTable.push({
+        firstChunk: track.finalizedChunks.length,
+        // 1-indexed
+        samplesPerChunk: track.currentChunk.samples.length
+      });
+    }
+    if (__privateGet(this, _options).fastStart === "in-memory") {
+      track.currentChunk.offset = 0;
+      return;
+    }
+    track.currentChunk.offset = __privateGet(this, _writer).pos;
+    for (let sample of track.currentChunk.samples) {
+      __privateGet(this, _writer).write(sample.data);
+      sample.data = null;
+    }
+    __privateMethod(this, _maybeFlushStreamingTargetWriter, maybeFlushStreamingTargetWriter_fn).call(this);
+  };
+  _finalizeFragment = new WeakSet();
+  finalizeFragment_fn = function(flushStreamingWriter = true) {
+    if (__privateGet(this, _options).fastStart !== "fragmented") {
+      throw new Error("Can't finalize a fragment unless 'fastStart' is set to 'fragmented'.");
+    }
+    let tracks = [__privateGet(this, _videoTrack), __privateGet(this, _audioTrack)].filter((track) => track && track.currentChunk);
+    if (tracks.length === 0)
+      return;
+    let fragmentNumber = __privateWrapper(this, _nextFragmentNumber)._++;
+    if (fragmentNumber === 1) {
+      let movieBox = moov(tracks, __privateGet(this, _creationTime), true);
+      __privateGet(this, _writer).writeBox(movieBox);
+    }
+    let moofOffset = __privateGet(this, _writer).pos;
+    let moofBox = moof(fragmentNumber, tracks);
+    __privateGet(this, _writer).writeBox(moofBox);
+    {
+      let mdatBox = mdat(false);
+      let totalTrackSampleSize = 0;
+      for (let track of tracks) {
+        for (let sample of track.currentChunk.samples) {
+          totalTrackSampleSize += sample.size;
+        }
+      }
+      let mdatSize = __privateGet(this, _writer).measureBox(mdatBox) + totalTrackSampleSize;
+      if (mdatSize >= 2 ** 32) {
+        mdatBox.largeSize = true;
+        mdatSize = __privateGet(this, _writer).measureBox(mdatBox) + totalTrackSampleSize;
+      }
+      mdatBox.size = mdatSize;
+      __privateGet(this, _writer).writeBox(mdatBox);
+    }
+    for (let track of tracks) {
+      track.currentChunk.offset = __privateGet(this, _writer).pos;
+      track.currentChunk.moofOffset = moofOffset;
+      for (let sample of track.currentChunk.samples) {
+        __privateGet(this, _writer).write(sample.data);
+        sample.data = null;
+      }
+    }
+    let endPos = __privateGet(this, _writer).pos;
+    __privateGet(this, _writer).seek(__privateGet(this, _writer).offsets.get(moofBox));
+    let newMoofBox = moof(fragmentNumber, tracks);
+    __privateGet(this, _writer).writeBox(newMoofBox);
+    __privateGet(this, _writer).seek(endPos);
+    for (let track of tracks) {
+      track.finalizedChunks.push(track.currentChunk);
+      __privateGet(this, _finalizedChunks).push(track.currentChunk);
+      track.currentChunk = null;
+    }
+    if (flushStreamingWriter) {
+      __privateMethod(this, _maybeFlushStreamingTargetWriter, maybeFlushStreamingTargetWriter_fn).call(this);
+    }
+  };
+  _maybeFlushStreamingTargetWriter = new WeakSet();
+  maybeFlushStreamingTargetWriter_fn = function() {
+    if (__privateGet(this, _writer) instanceof StreamTargetWriter) {
+      __privateGet(this, _writer).flush();
+    }
+  };
+  _ensureNotFinalized = new WeakSet();
+  ensureNotFinalized_fn = function() {
+    if (__privateGet(this, _finalized)) {
+      throw new Error("Cannot add new video or audio chunks after the file has been finalized.");
+    }
+  };
+  return __toCommonJS(src_exports);
+})();
+if (typeof module === "object" && typeof module.exports === "object") Object.assign(module.exports, Mp4Muxer)
+
+</script>
+<script>
+'use strict';
+(() => {
+/* ============================================================
+   Drishvana — script-to-video studio. Everything runs in-browser.
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const uid = () => Math.random().toString(36).slice(2, 10);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const ease = x => x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = t => { t = Math.max(0, t); return Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0'); };
+const words = s => (s || '').trim().split(/\s+/).filter(Boolean);
+const slug = s => (s || 'video').toLowerCase().replace(/[^a-z0-9ऀ-෿]+/gi, '-').replace(/^-+|-+$/g, '') || 'video';
+const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const FONT = '"Noto Sans Telugu","Noto Sans Devanagari","Nirmala UI","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif';
+const LEAD = 0.25, TAIL = 0.6, TRANS = 0.45;
+const ASPECTS = { '16:9': [16, 9], '9:16': [9, 16], '1:1': [1, 1] };
+const PALETTES = [
+  { n: 'Saffron Dusk', c: ['#2b1055', '#d4513b', '#ffb02e'] },
+  { n: 'Midnight', c: ['#070b1f', '#1b2a6b', '#4b6bff'] },
+  { n: 'Teal Bloom', c: ['#04201f', '#0f766e', '#5eead4'] },
+  { n: 'Rose Ink', c: ['#1a0b1a', '#8b1e5a', '#ff7aa8'] },
+  { n: 'Forest', c: ['#06140d', '#14532d', '#86efac'] },
+  { n: 'Ocean', c: ['#03111f', '#0b5d8f', '#7dd3fc'] },
+  { n: 'Violet', c: ['#120a2a', '#5b21b6', '#c4b5fd'] },
+  { n: 'Graphite', c: ['#0b0b10', '#25252f', '#6b6b80'] },
+];
+function sizeFor(aspect, short) {
+  const [a, b] = ASPECTS[aspect] || ASPECTS['16:9'];
+  return a >= b ? { W: Math.round(short * a / b / 2) * 2, H: short } : { W: short, H: Math.round(short * b / a / 2) * 2 };
+}
+
+/* ---------------- data model ---------------- */
+function newScene(o = {}) {
+  return Object.assign({
+    id: uid(), script: '', title: '',
+    vis: { type: 'gradient', pal: 0, color: '#14141c', img: null, vid: null },
+    motion: 'zoomin', trans: 'fade', audio: null, dur: null, caps: true,
+  }, o);
+}
+function sampleProject() {
+  return {
+    v: 1, name: 'My first video', aspect: '16:9', capStyle: 'pop', capPos: 'bottom', accent: '#FFB02E',
+    music: null, musicVol: 0.35, duck: 0.7,
+    scenes: [
+      newScene({ title: 'Welcome to Drishvana', script: 'Drishvana turns a script into a narrated video with captions and music, right in your browser.', vis: { type: 'gradient', pal: 0, color: '#14141c', img: null, vid: null } }),
+      newScene({ title: 'No 30-second wall', script: 'There is no thirty second limit. Add more scenes and your video simply gets longer.', vis: { type: 'gradient', pal: 1, color: '#14141c', img: null, vid: null }, trans: 'slide' }),
+      newScene({ title: 'Free and private', script: 'Record your voice, add your own images, and export an MP4. Nothing is ever uploaded.', vis: { type: 'gradient', pal: 2, color: '#14141c', img: null, vid: null } }),
+    ],
+  };
+}
+function normalize(p) {
+  const d = sampleProject();
+  p = Object.assign({}, d, p);
+  p.scenes = (p.scenes && p.scenes.length ? p.scenes : [newScene()]).map(s => {
+    const n = newScene(s); n.vis = Object.assign({ type: 'gradient', pal: 0, color: '#14141c', img: null, vid: null }, s.vis || {}); return n;
+  });
+  if (!ASPECTS[p.aspect]) p.aspect = '16:9';
+  return p;
+}
+
+let P = sampleProject();
+let sel = 0;
+const ST = { P, L: [], TOTAL: 0 };
+
+/* ---------------- media store (IndexedDB-backed) ---------------- */
+const M = new Map(); // id -> {id,name,kind,blob,url,img,vid,buf,dur}
+let DB = null;
+try {
+  DB = new Promise((res, rej) => {
+    const r = indexedDB.open('drishvana', 1);
+    r.onupgradeneeded = () => { r.result.createObjectStore('kv'); r.result.createObjectStore('media'); };
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+} catch (e) { DB = null; }
+async function idb(store, mode, fn) {
+  if (!DB) return null;
+  try {
+    const db = await DB;
+    return await new Promise((res, rej) => {
+      const tx = db.transaction(store, mode); const rq = fn(tx.objectStore(store));
+      tx.oncomplete = () => res(rq && rq.result); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error);
+    });
+  } catch (e) { return null; }
+}
+const idbPut = (s, k, v) => idb(s, 'readwrite', st => st.put(v, k));
+const idbGet = (s, k) => idb(s, 'readonly', st => st.get(k));
+const idbDel = (s, k) => idb(s, 'readwrite', st => st.delete(k));
+
+const decodeCtx = () => new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(2, 1, 44100);
+async function prepare(rec) {
+  if (rec.kind === 'image') {
+    rec.img = await createImageBitmap(rec.blob);
+  } else if (rec.kind === 'video') {
+    const v = document.createElement('video');
+    v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = rec.url;
+    await new Promise((res, rej) => { v.onloadeddata = res; v.onerror = () => rej(new Error('This video format cannot be read by your browser')); });
+    v.addEventListener('seeked', () => { if (!exporting && !playing) draw(); });
+    rec.vid = v; rec.dur = v.duration;
+  } else if (rec.kind === 'audio') {
+    rec.buf = await decodeCtx().decodeAudioData(await rec.blob.arrayBuffer());
+    rec.dur = rec.buf.duration;
+  }
+}
+async function addMedia(blob, name, kind, id) {
+  const rec = { id: id || uid(), name, kind, blob, url: URL.createObjectURL(blob) };
+  try { await prepare(rec); } catch (e) { URL.revokeObjectURL(rec.url); throw e; }
+  M.set(rec.id, rec);
+  idbPut('media', rec.id, { blob, name, kind });
+  return rec;
+}
+function usedMedia(p = P) {
+  const u = new Set();
+  p.scenes.forEach(s => { if (s.audio) u.add(s.audio); if (s.vis.img) u.add(s.vis.img); if (s.vis.vid) u.add(s.vis.vid); });
+  if (p.music) u.add(p.music);
+  return u;
+}
+function gcMedia() {
+  const u = usedMedia();
+  [...M.keys()].forEach(id => { if (!u.has(id)) { const r = M.get(id); try { r.vid && r.vid.pause(); URL.revokeObjectURL(r.url); } catch (e) { } M.delete(id); idbDel('media', id); } });
+}
+
+/* ---------------- timeline ---------------- */
+function sceneDur(s) {
+  if (s.dur > 0) return s.dur;
+  const a = s.audio && M.get(s.audio);
+  if (a && a.dur) return a.dur + LEAD + TAIL;
+  const w = words(s.script).length;
+  return w ? Math.max(2.5, w / 2.6 + 1.0) : (s.title ? 3 : 2.5);
+}
+function layoutOf(pr) {
+  let t = 0;
+  const L = pr.scenes.map(s => { const d = sceneDur(s); const o = { s, start: t, dur: d }; t += d; return o; });
+  return { L, TOTAL: t };
+}
+function relayout() { const r = layoutOf(P); ST.P = P; ST.L = r.L; ST.TOTAL = r.TOTAL; }
+function sceneAt(S, t) { const L = S.L; for (let i = 0; i < L.length; i++) if (t < L[i].start + L[i].dur) return i; return L.length - 1; }
+function wordTimes(s, dur) {
+  const ws = words(s.script); if (!ws.length) return [];
+  const a = s.audio && M.get(s.audio);
+  const st = a ? LEAD : Math.min(0.3, dur * 0.1);
+  const en = a ? LEAD + a.dur : Math.max(st + 0.5, dur - 0.4);
+  const wt = ws.map(w => w.length + (/[.,!?;:।]$/.test(w) ? 4 : 0) + 1);
+  const sum = wt.reduce((x, y) => x + y, 0); let acc = 0;
+  return ws.map((w, i) => { const t0 = st + (en - st) * acc / sum; acc += wt[i]; return { w, t0, t1: st + (en - st) * acc / sum }; });
+}
+
+/* ---------------- renderer ---------------- */
+let R = ST; // render state (swappable for the landing demo)
+
+function renderFrame(ctx, W, H, t, S) {
+  R = S || ST;
+  const i = sceneAt(R, t), o = R.L[i], local = clamp(t - o.start, 0, o.dur);
+  ctx.save(); ctx.globalAlpha = 1; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  const tr = o.s.trans;
+  if (i > 0 && tr !== 'cut' && local < TRANS) {
+    const pr = R.L[i - 1], p = ease(local / TRANS);
+    if (tr === 'fade') { drawScene(ctx, W, H, pr, pr.dur, false); ctx.globalAlpha = p; drawScene(ctx, W, H, o, local, true); }
+    else if (tr === 'dip') { if (p < .5) { ctx.globalAlpha = 1 - p * 2; drawScene(ctx, W, H, pr, pr.dur, false); } else { ctx.globalAlpha = p * 2 - 1; drawScene(ctx, W, H, o, local, true); } }
+    else { // slide
+      ctx.save(); ctx.translate(-p * W, 0); drawScene(ctx, W, H, pr, pr.dur, false); ctx.restore();
+      ctx.save(); ctx.translate((1 - p) * W, 0); drawScene(ctx, W, H, o, local, true); ctx.restore();
+    }
+  } else drawScene(ctx, W, H, o, local, true);
+  ctx.restore();
+}
+function drawScene(ctx, W, H, o, local, withCaps) {
+  ctx.save();
+  drawVisual(ctx, W, H, o, local);
+  // while paused in the editor, show text as if 0.6s in so scenes never look empty
+  const lt = (R === ST && !playing && !exporting && withCaps) ? Math.max(local, 0.6) : local;
+  if (o.s.title) drawHeadline(ctx, W, H, o, lt);
+  if (withCaps && R.P.capStyle !== 'none' && o.s.caps && o.s.script) drawCaptions(ctx, W, H, o, lt);
+  ctx.restore();
+}
+function drawGradient(ctx, W, H, c, t) {
+  const a = t * 0.12, cx = W / 2, cy = H / 2, r = Math.hypot(W, H) / 2;
+  const x1 = cx + Math.cos(a) * r, y1 = cy + Math.sin(a) * r;
+  const g = ctx.createLinearGradient(2 * cx - x1, 2 * cy - y1, x1, y1);
+  g.addColorStop(0, c[0]); g.addColorStop(.55, c[1]); g.addColorStop(1, c[2]);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  for (let k = 0; k < 2; k++) {
+    const x = W * (0.3 + 0.4 * Math.sin(t * 0.27 + k * 2.1)), y = H * (0.4 + 0.3 * Math.cos(t * 0.21 + k * 3.3)), rad = Math.max(W, H) * 0.55;
+    const rg = ctx.createRadialGradient(x, y, 0, x, y, rad);
+    rg.addColorStop(0, hexA(c[2], k ? .22 : .30)); rg.addColorStop(1, hexA(c[2], 0));
+    ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+  }
+  const vg = ctx.createRadialGradient(cx, cy, Math.min(W, H) * .3, cx, cy, r);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.38)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+}
+function drawVisual(ctx, W, H, o, local) {
+  const v = o.s.vis, p = local / o.dur;
+  if (v.type === 'image' || v.type === 'video') {
+    const rec = M.get(v.type === 'image' ? v.img : v.vid);
+    let src = null, sw = 0, sh = 0;
+    if (rec && rec.img) { src = rec.img; sw = rec.img.width; sh = rec.img.height; }
+    else if (rec && rec.vid && rec.vid.readyState >= 2) { src = rec.vid; sw = rec.vid.videoWidth; sh = rec.vid.videoHeight; }
+    if (src && sw && sh) {
+      let z = 1, px = 0;
+      if (v.type === 'image') {
+        const m = o.s.motion;
+        if (m === 'zoomin') z = 1 + 0.12 * p; else if (m === 'zoomout') z = 1.12 - 0.12 * p;
+        else if (m === 'panleft') { z = 1.12; px = (0.5 - p) * 0.08; } else if (m === 'panright') { z = 1.12; px = (p - 0.5) * 0.08; }
+      }
+      const base = Math.max(W / sw, H / sh), dw = sw * base * z, dh = sh * base * z;
+      ctx.drawImage(src, (W - dw) / 2 + px * W, (H - dh) / 2, dw, dh);
+      const g = ctx.createLinearGradient(0, H * .45, 0, H); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.5)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      return;
+    }
+  }
+  if (v.type === 'color') { ctx.fillStyle = v.color || '#14141c'; ctx.fillRect(0, 0, W, H); return; }
+  drawGradient(ctx, W, H, PALETTES[(v.pal || 0) % PALETTES.length].c, o.start + local);
+}
+function wrap(ctx, text, maxW) {
+  const out = []; let line = '';
+  for (const w of text.split(/\s+/)) {
+    const t = line ? line + ' ' + w : w;
+    if (line && ctx.measureText(t).width > maxW) { out.push(line); line = w; } else line = t;
+  }
+  if (line) out.push(line); return out;
+}
+function drawHeadline(ctx, W, H, o, local) {
+  const u = Math.min(W, H) / 100, fs = (W > H ? 7.4 : 8.2) * u;
+  const tin = ease(clamp(local / 0.6, 0, 1)), tout = clamp((o.dur - local) / 0.35, 0, 1);
+  ctx.save();
+  ctx.globalAlpha *= tin * tout;
+  ctx.font = `800 ${fs}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const lines = wrap(ctx, o.s.title, W * 0.8), lh = fs * 1.18;
+  const hasCap = o.s.script && R.P.capStyle !== 'none' && o.s.caps && R.P.capPos === 'bottom';
+  const cy = (hasCap ? H * 0.38 : H * 0.5) + (1 - tin) * 3 * u;
+  ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = u * 2.5; ctx.fillStyle = '#fff';
+  const y0 = cy - (lines.length - 1) * lh / 2;
+  lines.forEach((l, k) => ctx.fillText(l, W / 2, y0 + k * lh));
+  ctx.shadowBlur = 0; ctx.fillStyle = R.P.accent || '#FFB02E';
+  const bw = Math.min(W * 0.16, 14 * u) * tin, by = y0 + (lines.length - 1) * lh + fs * 0.78;
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(W / 2 - bw / 2, by, bw, u * 0.9, u * .45) : ctx.rect(W / 2 - bw / 2, by, bw, u * 0.9); ctx.fill();
+  ctx.restore();
+}
+function capPages(wt, maxWords) {
+  const pages = []; let s = 0;
+  for (let i = 0; i < wt.length; i++) {
+    const end = /[.!?।]$/.test(wt[i].w) || (i - s + 1) >= maxWords || i === wt.length - 1;
+    if (end) { pages.push([s, i]); s = i + 1; }
+  }
+  return pages;
+}
+function drawCaptions(ctx, W, H, o, local) {
+  const wt = wordTimes(o.s, o.dur); if (!wt.length) return;
+  if (local < wt[0].t0 - 0.05 || local > wt[wt.length - 1].t1 + 0.5) return;
+  let wi = 0; for (let k = 0; k < wt.length; k++) { if (local >= wt[k].t0) wi = k; else break; }
+  const pr = R.P, port = H > W, u = Math.min(W, H) / 100, fs = (port ? 5.8 : 5.0) * u, lh = fs * 1.32;
+  const pages = capPages(wt, port ? 4 : 7);
+  const pg = pages.find(([a, b]) => wi >= a && wi <= b) || pages[0];
+  ctx.save();
+  ctx.font = `800 ${fs}px ${FONT}`; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  const sp = Math.max(ctx.measureText(' ').width, fs * 0.36), maxW = W * (port ? 0.86 : 0.8);
+  const items = []; let line = [], lw = 0; const lines = [];
+  for (let k = pg[0]; k <= pg[1]; k++) {
+    const w = ctx.measureText(wt[k].w).width;
+    if (line.length && lw + sp + w > maxW) { lines.push({ it: line, w: lw }); line = []; lw = 0; }
+    line.push({ k, w: wt[k].w, wd: w }); lw += (line.length > 1 ? sp : 0) + w;
+  }
+  if (line.length) lines.push({ it: line, w: lw });
+  const bh = lines.length * lh, pos = pr.capPos;
+  const top = pos === 'top' ? H * 0.12 : pos === 'middle' ? (H - bh) / 2 : (port ? H * 0.76 : H * 0.88) - bh;
+  if (pr.capStyle === 'box') {
+    const bw = Math.max(...lines.map(l => l.w)) + fs * 1.4;
+    ctx.fillStyle = 'rgba(8,8,14,.72)'; ctx.beginPath();
+    const rx = (W - bw) / 2, ry = top - fs * .35, rh = bh + fs * .7;
+    ctx.roundRect ? ctx.roundRect(rx, ry, bw, rh, fs * .45) : ctx.rect(rx, ry, bw, rh); ctx.fill();
+  }
+  lines.forEach((ln, li) => {
+    let x = (W - ln.w) / 2; const y = top + li * lh + lh / 2;
+    ln.it.forEach(it => {
+      const act = it.k === wi, past = it.k < wi;
+      ctx.save();
+      if (pr.capStyle === 'pop') {
+        ctx.lineJoin = 'round'; ctx.lineWidth = fs * .2; ctx.strokeStyle = 'rgba(0,0,0,.95)';
+        if (act) { ctx.translate(x + it.wd / 2, y); ctx.scale(1.07, 1.07); ctx.translate(-(x + it.wd / 2), -y); }
+        ctx.strokeText(it.w, x, y); ctx.fillStyle = act ? pr.accent : '#fff'; ctx.fillText(it.w, x, y);
+      } else if (pr.capStyle === 'box') {
+        if (act) { ctx.fillStyle = pr.accent; ctx.beginPath(); const px = fs * .12; ctx.roundRect ? ctx.roundRect(x - px, y - lh * .4, it.wd + px * 2, lh * .8, fs * .25) : ctx.rect(x - px, y - lh * .4, it.wd + px * 2, lh * .8); ctx.fill(); }
+        ctx.fillStyle = act ? '#111' : '#fff'; ctx.fillText(it.w, x, y);
+      } else if (pr.capStyle === 'karaoke') {
+        ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = u * 1.6;
+        ctx.fillStyle = act ? pr.accent : past ? '#fff' : 'rgba(255,255,255,.5)'; ctx.fillText(it.w, x, y);
+      } else { // minimal
+        ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = u * 1.8; ctx.font = `700 ${fs * .92}px ${FONT}`;
+        ctx.fillStyle = act ? '#fff' : 'rgba(255,255,255,.78)'; ctx.fillText(it.w, x, y);
+      }
+      ctx.restore();
+      x += it.wd + sp;
+    });
+  });
+  ctx.restore();
+}
+
+/* ---------------- audio scheduling (shared by preview, export, recorder) ---------------- */
+function scheduleAudio(ctx, dest, from, when0, S = ST) {
+  const nodes = [], TOTAL = S.TOTAL, iv = [];
+  S.L.forEach(o => {
+    const a = o.s.audio && M.get(o.s.audio); if (!a || !a.buf) return;
+    const st = o.start + LEAD, en = st + a.buf.duration;
+    iv.push([st, en]);
+    if (en <= from) return;
+    const src = ctx.createBufferSource(); src.buffer = a.buf; src.connect(dest);
+    if (st >= from) src.start(when0 + (st - from)); else src.start(when0, from - st);
+    nodes.push(src);
+  });
+  const mu = S.P.music && M.get(S.P.music);
+  if (mu && mu.buf) {
+    const src = ctx.createBufferSource(); src.buffer = mu.buf; src.loop = true;
+    const duck = ctx.createGain(), fade = ctx.createGain();
+    src.connect(duck); duck.connect(fade); fade.connect(dest);
+    const vol = S.P.musicVol, low = vol * (1 - S.P.duck);
+    const merged = [];
+    iv.sort((x, y) => x[0] - y[0]).forEach(([a, b]) => { const l = merged[merged.length - 1]; if (l && a - l[1] < 1.2) l[1] = Math.max(l[1], b); else merged.push([a, b]); });
+    const gp = duck.gain;
+    gp.setValueAtTime(merged.some(([a, b]) => from >= a - 0.25 && from < b + 0.6) ? low : vol, when0);
+    merged.forEach(([a, b]) => {
+      const t1 = a - 0.25, t2 = a, t3 = b + 0.2, t4 = b + 0.6;
+      if (t4 <= from) return;
+      if (t1 >= from) { gp.setValueAtTime(vol, when0 + t1 - from); gp.linearRampToValueAtTime(low, when0 + t2 - from); }
+      if (t3 >= from) { gp.setValueAtTime(low, when0 + t3 - from); gp.linearRampToValueAtTime(vol, when0 + t4 - from); }
+      else gp.linearRampToValueAtTime(vol, when0 + t4 - from);
+    });
+    const fl = Math.min(1.5, TOTAL), fs = TOTAL - fl;
+    if (from >= fs) { fade.gain.setValueAtTime(clamp((TOTAL - from) / fl, 0, 1), when0); fade.gain.linearRampToValueAtTime(0, when0 + TOTAL - from); }
+    else { fade.gain.setValueAtTime(1, when0 + fs - from); fade.gain.linearRampToValueAtTime(0, when0 + TOTAL - from); }
+    src.start(when0, from % mu.buf.duration); src.stop(when0 + Math.max(0, TOTAL - from) + 0.05);
+    nodes.push(src);
+  }
+  return nodes;
+}
+
+/* ---------------- preview player ---------------- */
+let AC = null, playing = false, tNow = 0, playT0 = 0, playCtx0 = 0, srcs = [], exporting = false;
+const ensureAC = () => (AC || (AC = new (window.AudioContext || window.webkitAudioContext)()));
+const pcv = $('#cv'), pctx = pcv.getContext('2d');
+function sizeCanvas() { const s = sizeFor(P.aspect, 540); pcv.width = s.W; pcv.height = s.H; $('.cwrap').style.setProperty('--ar', `${s.W}/${s.H}`); }
+function syncVideos(t, pl) {
+  const i = sceneAt(ST, t), o = ST.L[i], local = t - o.start, act = new Set();
+  if (o.s.vis.type === 'video') {
+    const rec = M.get(o.s.vis.vid);
+    if (rec && rec.vid) {
+      const v = rec.vid; act.add(v); const tt = local % (v.duration || 1);
+      if (pl) { if (v.paused) v.play().catch(() => { }); if (Math.abs(v.currentTime - tt) > 0.35) v.currentTime = tt; }
+      else { v.pause(); if (Math.abs(v.currentTime - tt) > 0.04) v.currentTime = tt; }
+    }
+  }
+  M.forEach(r => { if (r.vid && !act.has(r.vid) && !r.vid.paused) r.vid.pause(); });
+}
+function draw() {
+  if (!ST.L.length) return;
+  syncVideos(tNow, playing);
+  renderFrame(pctx, pcv.width, pcv.height, Math.min(tNow, ST.TOTAL - 0.0001), ST);
+}
+function updateTime() {
+  $('#tm').textContent = `${fmt(tNow)} / ${fmt(ST.TOTAL)}`;
+  const ph = $('#scrub .ph'); if (ph) ph.style.left = (ST.TOTAL ? tNow / ST.TOTAL * 100 : 0) + '%';
+}
+function setPlayBtn() { $('#play').textContent = playing ? '❚❚' : '▶'; $('#play').setAttribute('aria-label', playing ? 'Pause' : 'Play'); }
+function play() {
+  if (playing || !ST.TOTAL || exporting) return;
+  ensureAC(); AC.resume();
+  if (tNow >= ST.TOTAL - 0.05) tNow = 0;
+  playCtx0 = AC.currentTime + 0.1; playT0 = tNow;
+  srcs = scheduleAudio(AC, AC.destination, tNow, playCtx0);
+  playing = true; setPlayBtn(); requestAnimationFrame(tick);
+}
+function pause() {
+  playing = false; srcs.forEach(s => { try { s.stop(); } catch (e) { } }); srcs = [];
+  setPlayBtn(); syncVideos(tNow, false);
+}
+function tick() {
+  if (!playing) return;
+  const t = playT0 + Math.max(0, AC.currentTime - playCtx0);
+  if (t >= ST.TOTAL) { tNow = ST.TOTAL; pause(); draw(); updateTime(); return; }
+  tNow = t;
+  const i = sceneAt(ST, t); if (i !== sel) { sel = i; renderStrip(); renderPanel(); }
+  draw(); updateTime(); requestAnimationFrame(tick);
+}
+function seekTo(t) { tNow = clamp(t, 0, ST.TOTAL); const i = sceneAt(ST, tNow); if (i !== sel) { sel = i; renderStrip(); renderPanel(); } draw(); updateTime(); }
+$('#play').onclick = () => playing ? pause() : play();
+const scrub = $('#scrub');
+scrub.addEventListener('pointerdown', e => {
+  if (exporting) return;
+  if (playing) pause();
+  scrub.setPointerCapture(e.pointerId);
+  const mv = ev => { const r = scrub.getBoundingClientRect(); seekTo(clamp((ev.clientX - r.left) / r.width, 0, 1) * ST.TOTAL); };
+  mv(e);
+  const up = () => { scrub.removeEventListener('pointermove', mv); scrub.removeEventListener('pointerup', up); };
+  scrub.addEventListener('pointermove', mv); scrub.addEventListener('pointerup', up);
+});
+document.addEventListener('keydown', e => {
+  if ($('#studio').hidden || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  if (!$('#mImport').hidden || !$('#mExport').hidden) return;
+  if (e.code === 'Space') { e.preventDefault(); playing ? pause() : play(); }
+});
+
+/* ---------------- UI: strip, scrubber, panel ---------------- */
+const cur = () => P.scenes[sel];
+function thumbBG(s) {
+  const v = s.vis;
+  if (v.type === 'image' && M.get(v.img)) return `background:#000 url('${M.get(v.img).url}') center/cover`;
+  if (v.type === 'color') return `background:${v.color}`;
+  const c = PALETTES[(v.pal || 0) % PALETTES.length].c;
+  return `background:linear-gradient(135deg,${c[0]},${c[1]},${c[2]})`;
+}
+function renderStrip() {
+  const el = $('#strip-list'); el.innerHTML = '';
+  P.scenes.forEach((s, i) => {
+    const d = document.createElement('div'); d.className = 'card' + (i === sel ? ' on' : '');
+    d.innerHTML = `<div class="thumb" style="${thumbBG(s)}"><span class="n">${i + 1}</span>${s.audio ? '<span class="b">VO</span>' : ''}<span class="dur">${(ST.L[i] ? ST.L[i].dur : 0).toFixed(1)}s</span></div><div class="cap">${esc(s.title || s.script || 'Empty scene')}</div>`;
+    d.onclick = () => { if (exporting) return; if (playing) pause(); sel = i; tNow = ST.L[i].start; renderStrip(); renderPanel(); draw(); updateTime(); };
+    el.appendChild(d);
+  });
+  const add = document.createElement('div'); add.className = 'card add'; add.textContent = '+'; add.title = 'Add scene'; add.onclick = addScene; el.appendChild(add);
+  $('#stripInfo').textContent = `${P.scenes.length} scene${P.scenes.length > 1 ? 's' : ''} · ${fmt(ST.TOTAL)}`;
+}
+function renderScrub() {
+  scrub.innerHTML = '';
+  ST.L.forEach((o, i) => {
+    const d = document.createElement('div'); d.className = 'seg' + (i === sel ? ' on' : '');
+    d.style.left = (o.start / ST.TOTAL * 100) + '%'; d.style.width = (o.dur / ST.TOTAL * 100) + '%';
+    const c = PALETTES[(o.s.vis.pal || 0) % PALETTES.length].c; d.style.background = o.s.vis.type === 'gradient' ? c[1] : '#4a4a62';
+    scrub.appendChild(d);
+  });
+  const ph = document.createElement('div'); ph.className = 'ph'; scrub.appendChild(ph);
+}
+function renderPanel() {
+  const s = cur(); if (!s) return;
+  $('#sScript').value = s.script; $('#sTitle').value = s.title;
+  $$('#visTabs button').forEach(b => b.classList.toggle('on', b.dataset.v === s.vis.type));
+  $('#visGradient').hidden = s.vis.type !== 'gradient'; $('#visColor').hidden = s.vis.type !== 'color'; $('#visMedia').hidden = !(s.vis.type === 'image' || s.vis.type === 'video');
+  $('#sColor').value = s.vis.color || '#14141c';
+  const pals = $('#pals'); pals.innerHTML = '';
+  PALETTES.forEach((p, i) => { const e = document.createElement('i'); e.className = i === s.vis.pal ? 'on' : ''; e.title = p.n; e.style.background = `linear-gradient(135deg,${p.c[0]},${p.c[1]},${p.c[2]})`; e.onclick = () => { s.vis.pal = i; changed(); }; pals.appendChild(e); });
+  const mid = s.vis.type === 'image' ? s.vis.img : s.vis.type === 'video' ? s.vis.vid : null, mr = mid && M.get(mid);
+  $('#visInfo').textContent = mr ? mr.name : `No ${s.vis.type} chosen yet`; $('#visInfo').classList.toggle('has', !!mr);
+  $('#btnVisUpload').textContent = mr ? 'Replace file…' : 'Choose file…'; $('#btnVisClear').hidden = !mr;
+  $('#sMotion').value = s.motion; $('#sMotion').disabled = s.vis.type === 'video'; $('#sTrans').value = s.trans;
+  const a = s.audio && M.get(s.audio);
+  $('#voiceInfo').textContent = a ? `${a.name} · ${a.dur.toFixed(1)}s` : 'No voice. Scene length is estimated from the text.'; $('#voiceInfo').classList.toggle('has', !!a);
+  $('#btnRmAudio').hidden = !a;
+  $('#sDur').value = s.dur || ''; $('#durHint').textContent = s.dur ? '' : `auto · ${ST.L[sel] ? ST.L[sel].dur.toFixed(1) : ''}s`;
+  $('#sCaps').checked = s.caps;
+  // project tab
+  $$('#aspTabs button').forEach(b => b.classList.toggle('on', b.dataset.a === P.aspect));
+  $('#capStyle').value = P.capStyle; $('#capPos').value = P.capPos; $('#accent').value = P.accent;
+  const mu = P.music && M.get(P.music); $('#musicInfo').textContent = mu ? `${mu.name} · ${fmt(mu.dur)}` : 'No music'; $('#musicInfo').classList.toggle('has', !!mu); $('#btnRmMusic').hidden = !mu;
+  $('#musicVol').value = P.musicVol; $('#vVol').textContent = Math.round(P.musicVol * 100) + '%';
+  $('#duckAmt').value = P.duck; $('#vDuck').textContent = Math.round(P.duck * 100) + '%';
+  const nv = P.scenes.filter(x => x.audio).length;
+  $('#pStats').innerHTML = `${P.scenes.length} scenes · ${fmt(ST.TOTAL)} total<br>${nv} with voice · ${words(P.scenes.map(x => x.script).join(' ')).length} words`;
+  $('#pname').value = P.name;
+}
+let saveT = 0;
+function scheduleSave() { clearTimeout(saveT); saveT = setTimeout(() => { gcMedia(); idbPut('kv', 'project', JSON.parse(JSON.stringify(P))); }, 700); }
+function changed(o = {}) {
+  relayout();
+  if (o.panel !== false) renderPanel(); else { $('#durHint').textContent = cur().dur ? '' : `auto · ${ST.L[sel].dur.toFixed(1)}s`; }
+  renderStrip(); renderScrub(); tNow = Math.min(tNow, ST.TOTAL); updateTime(); draw(); scheduleSave();
+}
+function toast(msg, ms = 3200) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('on'), ms); }
+
+/* scene ops */
+function addScene() {
+  if (exporting) return; if (playing) pause();
+  const s = newScene({ vis: { type: 'gradient', pal: (P.scenes.length) % PALETTES.length, color: '#14141c', img: null, vid: null } });
+  P.scenes.splice(sel + 1, 0, s); sel++; tNow = 0; changed(); tNow = ST.L[sel].start; changed();
+}
+$('#opAdd').onclick = addScene;
+$('#opDup').onclick = () => { if (exporting) return; const c = JSON.parse(JSON.stringify(cur())); c.id = uid(); P.scenes.splice(sel + 1, 0, c); sel++; changed(); };
+$('#opDel').onclick = () => { if (exporting) return; if (P.scenes.length < 2) return toast('A project needs at least one scene'); pause(); P.scenes.splice(sel, 1); sel = Math.min(sel, P.scenes.length - 1); changed(); tNow = ST.L[sel].start; draw(); updateTime(); };
+$('#opLeft').onclick = () => { if (sel > 0) { [P.scenes[sel - 1], P.scenes[sel]] = [P.scenes[sel], P.scenes[sel - 1]]; sel--; changed(); } };
+$('#opRight').onclick = () => { if (sel < P.scenes.length - 1) { [P.scenes[sel + 1], P.scenes[sel]] = [P.scenes[sel], P.scenes[sel + 1]]; sel++; changed(); } };
+
+/* field bindings */
+$('#sScript').oninput = e => { cur().script = e.target.value; changed({ panel: false }); };
+$('#sTitle').oninput = e => { cur().title = e.target.value; changed({ panel: false }); };
+$('#sColor').oninput = e => { cur().vis.color = e.target.value; changed({ panel: false }); };
+$('#sMotion').onchange = e => { cur().motion = e.target.value; changed(); };
+$('#sTrans').onchange = e => { cur().trans = e.target.value; changed(); };
+$('#sCaps').onchange = e => { cur().caps = e.target.checked; changed(); };
+$('#sDur').oninput = e => { const v = parseFloat(e.target.value); cur().dur = v > 0 ? clamp(v, 1, 600) : null; changed({ panel: false }); };
+$('#pname').oninput = e => { P.name = e.target.value; scheduleSave(); };
+$$('#visTabs button').forEach(b => b.onclick = () => { const s = cur(); s.vis.type = b.dataset.v; changed(); });
+$$('#aspTabs button').forEach(b => b.onclick = () => { P.aspect = b.dataset.a; sizeCanvas(); changed(); });
+$('#capStyle').onchange = e => { P.capStyle = e.target.value; changed(); };
+$('#capPos').onchange = e => { P.capPos = e.target.value; changed(); };
+$('#accent').oninput = e => { P.accent = e.target.value; changed({ panel: false }); };
+$('#musicVol').oninput = e => { P.musicVol = +e.target.value; $('#vVol').textContent = Math.round(P.musicVol * 100) + '%'; scheduleSave(); };
+$('#duckAmt').oninput = e => { P.duck = +e.target.value; $('#vDuck').textContent = Math.round(P.duck * 100) + '%'; scheduleSave(); };
+$$('.tabs button').forEach(b => b.onclick = () => { $$('.tabs button').forEach(x => x.classList.toggle('on', x === b)); $('#tabScene').hidden = b.dataset.tab !== 'scene'; $('#tabProject').hidden = b.dataset.tab !== 'project'; });
+
+/* file inputs */
+const pick = (input, accept) => { if (accept) input.accept = accept; input.value = ''; input.click(); };
+$('#btnVisUpload').onclick = () => pick($('#fVis'), cur().vis.type === 'video' ? 'video/*' : 'image/*');
+$('#btnVisClear').onclick = () => { const v = cur().vis; if (v.type === 'image') v.img = null; else v.vid = null; changed(); };
+$('#fVis').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return; const s = cur(), isV = s.vis.type === 'video';
+  if (isV ? !f.type.startsWith('video/') : !f.type.startsWith('image/')) return toast(`Please choose a${isV ? ' video' : 'n image'} file`);
+  try { toast('Loading…', 8000); const r = await addMedia(f, f.name, isV ? 'video' : 'image'); if (isV) s.vis.vid = r.id; else s.vis.img = r.id; toast('Added ' + f.name); changed(); }
+  catch (err) { toast(err.message || 'Could not read that file'); }
+};
+$('#btnUpAudio').onclick = () => pick($('#fAudio'));
+$('#fAudio').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return; const s = cur();
+  try { toast('Decoding audio…', 8000); const r = await addMedia(f, f.name, 'audio'); s.audio = r.id; s.dur = null; toast('Voice added: ' + r.dur.toFixed(1) + 's'); changed(); }
+  catch (err) { toast('Could not decode that audio file'); }
+};
+$('#btnRmAudio').onclick = () => { cur().audio = null; changed(); };
+$('#btnMusic').onclick = () => pick($('#fMusic'));
+$('#fMusic').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { toast('Decoding music…', 8000); const r = await addMedia(f, f.name, 'audio'); P.music = r.id; toast('Music added'); changed(); }
+  catch (err) { toast('Could not decode that audio file'); }
+};
+$('#btnRmMusic').onclick = () => { P.music = null; changed(); };
+
+/* mic recording */
+let recorder = null;
+$('#btnRec').onclick = async () => {
+  if (recorder) { recorder.stop(); return; }
+  if (!navigator.mediaDevices || !window.MediaRecorder) return toast('Recording is not supported in this browser');
+  let stream; try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { return toast('Microphone permission was denied'); }
+  const s = cur(), chunks = []; if (playing) pause();
+  recorder = new MediaRecorder(stream);
+  recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
+  recorder.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop());
+    const type = recorder.mimeType || 'audio/webm'; recorder = null;
+    $('#btnRec').textContent = '● Record'; $('#btnRec').classList.remove('live');
+    try { const r = await addMedia(new Blob(chunks, { type }), 'recording-' + new Date().toISOString().slice(11, 19).replace(/:/g, '') + '.' + (type.includes('mp4') ? 'm4a' : 'webm'), 'audio'); s.audio = r.id; s.dur = null; toast('Recorded ' + r.dur.toFixed(1) + 's'); changed(); }
+    catch (err) { toast('Could not use that recording'); }
+  };
+  recorder.start(); $('#btnRec').textContent = '■ Stop'; $('#btnRec').classList.add('live');
+};
+
+/* device voice preview (not exported) */
+$('#btnSpeak').onclick = e => {
+  e.preventDefault(); const t = cur().script.trim();
+  if (!t || !window.speechSynthesis) return toast('Nothing to speak, or not supported');
+  speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(t));
+};
+
+/* local AI voice (Kokoro, beta, lazy-loaded) */
+let kokoro = null;
+function floatToWav(f32, sr) {
+  const n = f32.length, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, clamp(f32[i], -1, 1) * 32767, true);
+  return new Blob([buf], { type: 'audio/wav' });
+}
+$('#btnAI').onclick = async () => {
+  const s = cur(), text = s.script.trim(), btn = $('#btnAI'); if (!text) return toast('Write the voiceover script first');
+  btn.disabled = true; const info = $('#voiceInfo');
+  try {
+    if (!kokoro) {
+      info.textContent = 'Loading voice engine… first run downloads about 90 MB';
+      const mod = await import('https://cdn.jsdelivr.net/npm/kokoro-js@1/+esm');
+      kokoro = await mod.KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', {
+        dtype: 'q8', device: 'wasm',
+        progress_callback: p => { if (p && p.status === 'progress' && p.progress != null) info.textContent = `Downloading voice model… ${Math.round(p.progress)}%`; },
+      });
+    }
+    info.textContent = 'Generating voice…';
+    const out = await kokoro.generate(text, { voice: $('#aiVoice').value });
+    const r = await addMedia(floatToWav(out.audio, out.sampling_rate), 'ai-voice.wav', 'audio');
+    s.audio = r.id; s.dur = null; toast('AI voice ready: ' + r.dur.toFixed(1) + 's'); changed();
+  } catch (e) { console.error(e); kokoro = null; renderPanel(); toast('Could not load the local voice engine. It needs an internet connection the first time.', 5000); }
+  btn.disabled = false;
+};
+
+/* script import */
+function splitScript(text) {
+  let parts = text.split(/\n\s*\n/).map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  if (parts.length < 2) {
+    const ss = text.replace(/\s+/g, ' ').trim().match(/[^.!?।]+[.!?।]*\s*/g) || [text.trim()];
+    parts = []; let c = '';
+    for (const x of ss) { if (c && (c + x).length > 170) { parts.push(c.trim()); c = x; } else c += x; }
+    if (c.trim()) parts.push(c.trim());
+  }
+  return parts;
+}
+const openModal = id => { $(id).hidden = false; }, closeModal = id => { $(id).hidden = true; };
+$('#btnImport').onclick = () => { if (playing) pause(); openModal('#mImport'); $('#impText').focus(); };
+$('#impCancel').onclick = () => closeModal('#mImport');
+$('#impGo').onclick = () => {
+  const parts = splitScript($('#impText').value); if (!parts.length) return toast('Paste some text first');
+  const replace = document.querySelector('input[name=impMode]:checked').value === 'replace';
+  const base = replace ? 0 : P.scenes.length, motions = ['zoomin', 'zoomout', 'panleft', 'panright'];
+  const sc = parts.map((t, i) => newScene({ script: t, motion: motions[i % 4], vis: { type: 'gradient', pal: (base + i) % PALETTES.length, color: '#14141c', img: null, vid: null } }));
+  if (replace) { P.scenes = sc; sel = 0; } else { P.scenes.push(...sc); sel = base; }
+  closeModal('#mImport'); $('#impText').value = ''; changed(); tNow = ST.L[sel].start; draw(); updateTime(); toast(`${sc.length} scenes created`);
+};
+
+/* ---------------- project save / open / new ---------------- */
+const blobToDataURL = b => new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(f.result); f.onerror = rej; f.readAsDataURL(b); });
+function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 20000); }
+$('#btnSave').onclick = async () => {
+  try {
+    toast('Packing project…', 8000); const media = {};
+    for (const id of usedMedia()) { const r = M.get(id); if (r) media[id] = { name: r.name, kind: r.kind, data: await blobToDataURL(r.blob) }; }
+    download(new Blob([JSON.stringify({ app: 'drishvana', version: 1, project: P, media })], { type: 'application/json' }), slug(P.name) + '.drishvana');
+    toast('Project saved');
+  } catch (e) { toast('Could not save project'); }
+};
+$('#btnOpen').onclick = () => pick($('#fProject'));
+async function loadProject(obj) {
+  if (playing) pause(); M.forEach(r => { try { URL.revokeObjectURL(r.url); } catch (e) { } }); M.clear();
+  for (const [id, m] of Object.entries(obj.media || {})) { try { const b = await (await fetch(m.data)).blob(); await addMedia(b, m.name, m.kind, id); } catch (e) { console.warn('media failed', id, e); } }
+  P = normalize(obj.project); sel = 0; tNow = 0; sizeCanvas(); changed();
+}
+$('#fProject').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { const o = JSON.parse(await f.text()); if (o.app !== 'drishvana') throw 0; toast('Opening…', 8000); await loadProject(o); toast('Opened ' + P.name); }
+  catch (err) { toast('That is not a Drishvana project file'); }
+};
+$('#btnNew').onclick = async () => { if (confirm('Start a new project? Your current project will be replaced (save it first if you need it).')) { await loadProject({ project: sampleProject() }); } };
+
+/* ---------------- export ---------------- */
+let cancelFlag = false;
+const hasFast = !!(window.VideoEncoder && window.AudioEncoder && window.VideoFrame && window.AudioData);
+function videoTargets(t) {
+  const out = [], i = sceneAt(ST, t), o = ST.L[i], local = t - o.start;
+  const vid = (s) => { const r = s.vis.type === 'video' && M.get(s.vis.vid); return r && r.vid; };
+  const v = vid(o.s); if (v) out.push([v, local]);
+  if (i > 0 && local < TRANS) { const pv = vid(ST.L[i - 1].s); if (pv) out.push([pv, ST.L[i - 1].dur]); }
+  return out;
+}
+function seekVideo(v, tt) {
+  return new Promise(res => {
+    const d = v.duration || 0; if (d > 0) tt = tt % d;
+    if (Math.abs(v.currentTime - tt) < 0.001 && v.readyState >= 2) return res();
+    let done = false; const fin = () => { if (done) return; done = true; v.removeEventListener('seeked', fin); res(); };
+    v.addEventListener('seeked', fin); setTimeout(fin, 1500); v.pause(); v.currentTime = tt;
+  });
+}
+function setProg(f, txt) { $('#exBar').style.width = Math.round(clamp(f, 0, 1) * 100) + '%'; if (txt) $('#exTxt').textContent = txt; }
+async function pickCodecs(W, H, fps, bitrate) {
+  let v = null, a = null;
+  for (const c of [{ enc: 'avc1.640032', mux: 'avc' }, { enc: 'avc1.640028', mux: 'avc' }, { enc: 'avc1.4d0028', mux: 'avc' }, { enc: 'vp09.00.40.08', mux: 'vp9' }]) {
+    try { const r = await VideoEncoder.isConfigSupported({ codec: c.enc, width: W, height: H, bitrate, framerate: fps }); if (r.supported) { v = c; break; } } catch (e) { }
+  }
+  for (const c of [{ enc: 'mp4a.40.2', mux: 'aac' }, { enc: 'opus', mux: 'opus' }]) {
+    try { const r = await AudioEncoder.isConfigSupported({ codec: c.enc, sampleRate: 44100, numberOfChannels: 2, bitrate: 128000 }); if (r.supported) { a = c; break; } } catch (e) { }
+  }
+  return v && a ? { v, a } : null;
+}
+async function exportFast(codecs, W, H, fps, bitrate) {
+  const total = ST.TOTAL, SR = 44100, nFrames = Math.ceil(total * fps);
+  setProg(0, 'Mixing audio…');
+  const off = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(2, Math.ceil(total * SR), SR);
+  scheduleAudio(off, off.destination, 0, 0);
+  const abuf = await off.startRendering();
+  const muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: codecs.v.mux, width: W, height: H }, audio: { codec: codecs.a.mux, numberOfChannels: 2, sampleRate: SR }, fastStart: 'in-memory' });
+  let encErr = null;
+  const venc = new VideoEncoder({ output: (c, m) => muxer.addVideoChunk(c, m), error: e => { encErr = e; } });
+  venc.configure({ codec: codecs.v.enc, width: W, height: H, bitrate, framerate: fps });
+  const aenc = new AudioEncoder({ output: (c, m) => muxer.addAudioChunk(c, m), error: e => { encErr = e; } });
+  aenc.configure({ codec: codecs.a.enc, sampleRate: SR, numberOfChannels: 2, bitrate: 128000 });
+  const c0 = abuf.getChannelData(0), c1 = abuf.numberOfChannels > 1 ? abuf.getChannelData(1) : c0, CH = 4096;
+  for (let i = 0; i < abuf.length; i += CH) {
+    const n = Math.min(CH, abuf.length - i), data = new Float32Array(n * 2);
+    data.set(c0.subarray(i, i + n), 0); data.set(c1.subarray(i, i + n), n);
+    const ad = new AudioData({ format: 'f32-planar', sampleRate: SR, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round(i / SR * 1e6), data });
+    aenc.encode(ad); ad.close();
+    if (aenc.encodeQueueSize > 40) await sleep(1);
+  }
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
+  const t0 = performance.now();
+  for (let f = 0; f < nFrames; f++) {
+    if (cancelFlag) throw new Error('cancelled'); if (encErr) throw encErr;
+    const t = Math.min(f / fps, total - 0.5 / fps);
+    await Promise.all(videoTargets(t).map(([v, tt]) => seekVideo(v, tt)));
+    renderFrame(ctx, W, H, t, ST);
+    const fr = new VideoFrame(cv, { timestamp: Math.round(f * 1e6 / fps), duration: Math.round(1e6 / fps) });
+    venc.encode(fr, { keyFrame: f % (fps * 2) === 0 }); fr.close();
+    while (venc.encodeQueueSize > 8) await sleep(2);
+    if (f % 6 === 0) {
+      const el = (performance.now() - t0) / 1000, eta = f ? el / f * (nFrames - f) : 0;
+      setProg(f / nFrames, `Rendering frame ${f} of ${nFrames}` + (f > 30 ? ` · about ${fmt(eta)} left` : '')); await sleep(0);
+    }
+  }
+  setProg(1, 'Finishing file…');
+  await venc.flush(); await aenc.flush(); if (encErr) throw encErr;
+  muxer.finalize();
+  return { blob: new Blob([muxer.target.buffer], { type: 'video/mp4' }), ext: 'mp4' };
+}
+async function exportRealtime(W, H, fps, bitrate) {
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
+  const stream = cv.captureStream(fps); ensureAC(); await AC.resume();
+  const dest = AC.createMediaStreamDestination(); dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+  const mime = ['video/mp4;codecs=avc1,mp4a.40.2', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m));
+  if (!mime) throw new Error('This browser cannot record video. Please use a recent Chrome, Edge or Safari.');
+  const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: bitrate, audioBitsPerSecond: 128000 }), chunks = [];
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  const stopped = new Promise(r => rec.onstop = r);
+  // MediaRecorder stalls if the audio destination has no live input, so keep a silent source attached
+  const keep = AC.createOscillator(), kg = AC.createGain(); kg.gain.value = 0; keep.connect(kg); kg.connect(dest); keep.start();
+  const when0 = AC.currentTime + 0.2, nodes = scheduleAudio(AC, dest, 0, when0); nodes.push(keep);
+  rec.start(1000);
+  await new Promise((res, rej) => {
+    const loop = () => {
+      if (cancelFlag) { rej(new Error('cancelled')); return; }
+      const t = Math.max(0, AC.currentTime - when0);
+      if (t >= ST.TOTAL) { res(); return; }
+      syncVideos(t, true); renderFrame(ctx, W, H, t, ST); setProg(t / ST.TOTAL, `Recording in real time… ${fmt(t)} / ${fmt(ST.TOTAL)}. Keep this tab open.`);
+      requestAnimationFrame(loop);
+    }; loop();
+  }).finally(() => { nodes.forEach(n => { try { n.stop(); } catch (e) { } }); M.forEach(r => r.vid && r.vid.pause()); });
+  await sleep(300); rec.stop(); await stopped;
+  const ext = mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+  return { blob: new Blob(chunks, { type: mime.split(';')[0] }), ext };
+}
+function openExport() {
+  if (playing) pause();
+  $('#exSummary').textContent = `${P.scenes.length} scenes · ${fmt(ST.TOTAL)} · ${P.aspect}`;
+  $('#exOpts').hidden = false; $('#exProg').hidden = true; $('#exResult').hidden = true; $('#exResult').innerHTML = '';
+  $('#exGo').hidden = false; $('#exGo').disabled = false; $('#exGo').textContent = 'Start export'; $('#exClose').textContent = 'Close';
+  $('#exMode').textContent = hasFast ? 'Fast mode: renders faster than real time and saves an MP4 file.' : 'Your browser lacks WebCodecs, so export records in real time and you must keep this tab open.';
+  $('#exGo').onclick = runExport; openModal('#mExport');
+}
+$('#btnExport').onclick = openExport;
+$('#exClose').onclick = () => { if (exporting) { cancelFlag = true; } else closeModal('#mExport'); };
+async function runExport() {
+  if (exporting) return;
+  exporting = true; cancelFlag = false; $('#exOpts').hidden = true; $('#exProg').hidden = false; $('#exGo').hidden = true; $('#exClose').textContent = 'Cancel';
+  const short = +$('#exQ').value, fps = +$('#exFps').value, { W, H } = sizeFor(P.aspect, short), bitrate = short >= 1080 ? 8e6 : 4.5e6;
+  try {
+    let out, mode = 'fast', codecs = null;
+    if (hasFast) codecs = await pickCodecs(W, H, fps, bitrate);
+    if (codecs) { try { out = await exportFast(codecs, W, H, fps, bitrate); } catch (e) { if (e.message === 'cancelled') throw e; console.warn('Fast export failed, falling back', e); mode = 'realtime'; } } else mode = 'realtime';
+    if (mode === 'realtime') { setProg(0, 'Using real-time recording…'); out = await exportRealtime(W, H, fps, bitrate); }
+    const url = URL.createObjectURL(out.blob), name = `${slug(P.name)}.${out.ext}`;
+    $('#exProg').hidden = true; $('#exResult').hidden = false;
+    $('#exResult').innerHTML = `<div style="font-weight:700">Done · ${(out.blob.size / 1048576).toFixed(1)} MB · ${W}×${H}</div><video controls src="${url}"></video>`;
+    const dl = $('#exGo'); dl.hidden = false; dl.textContent = 'Download ' + out.ext.toUpperCase(); dl.onclick = () => download(out.blob, name);
+    $('#exClose').textContent = 'Close'; download(out.blob, name);
+    window.__lastExport = { size: out.blob.size, ext: out.ext, mode, W, H, total: ST.TOTAL };
+  } catch (e) {
+    console.error(e);
+    $('#exProg').hidden = false; setProg(0, e.message === 'cancelled' ? 'Export cancelled.' : 'Export failed: ' + (e.message || e));
+    $('#exClose').textContent = 'Close'; const g = $('#exGo'); g.hidden = false; g.textContent = 'Try again'; g.onclick = openExport;
+    window.__lastExport = { error: String(e.message || e) };
+  }
+  exporting = false; draw();
+}
+$('#exGo').onclick = runExport;
+
+/* ---------------- landing, routing, init ---------------- */
+const DEMO = (() => {
+  const mk = (title, script, pal, dur, trans) => newScene({ title, script, dur, trans, vis: { type: 'gradient', pal, color: '#14141c', img: null, vid: null } });
+  const p = normalize({ name: 'demo', scenes: [
+    mk('Drishvana', 'Turn a script into a narrated video.', 0, 3.6, 'fade'),
+    mk('No 30-second wall', 'Add scenes, record your voice, and your video just gets longer.', 1, 4.4, 'slide'),
+    mk('Captions and music', 'Word-by-word captions, with music that ducks under your voice.', 2, 4.4, 'fade'),
+    mk('Free. Private. Yours.', 'It all runs in your browser. Nothing is uploaded.', 3, 4.0, 'dip'),
+  ] });
+  return Object.assign({ P: p }, layoutOf(p));
+})();
+const hcv = $('#heroCv'), hctx = hcv.getContext('2d'), h0 = performance.now();
+function heroTick() {
+  if (!$('#landing').hidden && !document.hidden) renderFrame(hctx, 960, 540, ((performance.now() - h0) / 1000) % DEMO.TOTAL, DEMO);
+  requestAnimationFrame(heroTick);
+}
+let studioReady = false;
+function route() {
+  const st = location.hash === '#studio';
+  $('#landing').hidden = st; $('#studio').hidden = !st;
+  if (st) { if (!studioReady) { studioReady = true; } sizeCanvas(); changed(); }
+  else { if (playing) pause(); }
+}
+window.addEventListener('hashchange', route);
+$$('[data-open-studio]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); location.hash = '#studio'; window.scrollTo(0, 0); }));
+$$('[data-home]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); history.pushState('', '', location.pathname); route(); window.scrollTo(0, 0); }));
+$$('[data-scroll]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth' }); }));
+$('#yr').textContent = new Date().getFullYear();
+document.addEventListener('visibilitychange', () => { if (document.hidden && playing) pause(); });
+
+(async function init() {
+  try {
+    const saved = await idbGet('kv', 'project');
+    if (saved && saved.scenes) {
+      const p = normalize(saved);
+      for (const id of usedMedia(p)) {
+        const m = await idbGet('media', id);
+        if (m && m.blob) { try { const rec = { id, name: m.name, kind: m.kind, blob: m.blob, url: URL.createObjectURL(m.blob) }; await prepare(rec); M.set(id, rec); } catch (e) { console.warn('restore failed', id); } }
+      }
+      P = p;
+    }
+  } catch (e) { console.warn(e); }
+  relayout(); sizeCanvas(); route(); heroTick();
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => { });
+  window.__dv = { get P() { return P; }, M, ST, loadProject, changed, addMedia, renderFrame, exportState: () => window.__lastExport };
+})();
+})();
+
+</script>
+</body>
+</html>

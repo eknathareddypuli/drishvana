@@ -1,0 +1,11 @@
+{
+  "name": "Drishvana",
+  "short_name": "Drishvana",
+  "description": "Free long-form video studio. Script to narrated MP4, in your browser.",
+  "start_url": "./#studio",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0B0B10",
+  "theme_color": "#0B0B10",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
